@@ -6,6 +6,7 @@ import SignupPage from './Pages/SignupPage'
 import Dashboard from './Pages/Dashboard'
 import GamePage from './Pages/GamePage'
 import GoogleCallback from './Components/GoogleCallback'
+import LogoutConfirmation from './Components/LogoutConfirmation'
 import './App.css'
 import React from 'react'
 import apiService from './services/api'
@@ -34,6 +35,7 @@ function App() {
   const [isDarkMode, setIsDarkMode] = useState(false);
   const [user, setUser] = useState(null);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
 
   const toggleTheme = () => {
     setIsDarkMode(!isDarkMode);
@@ -55,7 +57,16 @@ function App() {
       setIsAuthenticated(false);
       localStorage.removeItem('token');
       localStorage.removeItem('user');
+      setShowLogoutConfirm(false);
     }
+  };
+
+  const handleLogoutClick = () => {
+    setShowLogoutConfirm(true);
+  };
+
+  const handleLogoutCancel = () => {
+    setShowLogoutConfirm(false);
   };
 
   // Check for existing user on app load
@@ -80,7 +91,7 @@ function App() {
 
   return (
     <ThemeContext.Provider value={{ isDarkMode, toggleTheme }}>
-      <AuthContext.Provider value={{ user, isAuthenticated, login, logout }}>
+      <AuthContext.Provider value={{ user, isAuthenticated, login, logout, handleLogoutClick }}>
         <Router>
           <div className={`min-h-screen transition-colors duration-300 ${
             isDarkMode 
@@ -103,6 +114,13 @@ function App() {
               } />
               <Route path="/auth/google/callback" element={<GoogleCallback />} />
             </Routes>
+            
+            {/* Logout Confirmation Modal */}
+            <LogoutConfirmation
+              isOpen={showLogoutConfirm}
+              onConfirm={logout}
+              onCancel={handleLogoutCancel}
+            />
           </div>
         </Router>
       </AuthContext.Provider>

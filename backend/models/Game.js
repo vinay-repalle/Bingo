@@ -1,149 +1,164 @@
 import mongoose from 'mongoose';
 
 const gameSchema = new mongoose.Schema({
-  player: {
+  userId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',
-    required: true
+    required: true,
+    index: true
   },
   gameType: {
     type: String,
-    enum: ['classic', 'speed', 'challenge'],
-    default: 'classic'
+    enum: ['bingo', 'practice', 'tournament'],
+    default: 'bingo'
   },
-  status: {
+  result: {
     type: String,
-    enum: ['active', 'completed', 'abandoned'],
-    default: 'active'
-  },
-  board: {
-    type: [[Number]],
+    enum: ['win', 'loss', 'draw'],
     required: true
   },
-  calledNumbers: {
-    type: [Number],
-    default: []
+  opponent: {
+    type: String,
+    enum: ['computer', 'player'],
+    default: 'computer'
   },
-  markedNumbers: {
-    type: [Number],
-    default: []
-  },
-  startTime: {
-    type: Date,
-    default: Date.now
-  },
-  endTime: {
-    type: Date,
-    default: null
+  score: {
+    userLines: { type: Number, default: 0 },
+    opponentLines: { type: Number, default: 0 },
+    totalMoves: { type: Number, default: 0 }
   },
   duration: {
     type: Number, // in seconds
     default: 0
   },
-  score: {
-    type: Number,
-    default: 0
+  completedAt: {
+    type: Date,
+    default: Date.now
   },
-  won: {
-    type: Boolean,
-    default: false
-  },
-  moves: [{
-    number: Number,
-    timestamp: {
-      type: Date,
-      default: Date.now
-    },
-    action: {
-      type: String,
-      enum: ['call', 'mark', 'unmark'],
-      required: true
-    }
-  }],
-  patterns: {
-    type: [String],
-    default: []
-  },
-  difficulty: {
+  achievements: [{
     type: String,
-    enum: ['easy', 'medium', 'hard'],
-    default: 'medium'
-  }
+    enum: [
+      'first_win',
+      'winning_streak_3',
+      'winning_streak_5',
+      'winning_streak_10',
+      'quick_win',
+      'perfect_game',
+      'comeback_king',
+      'speed_demon',
+      'strategist',
+      'bingo_master'
+    ]
+  }]
 }, {
   timestamps: true
 });
 
-// Index for better query performance
-gameSchema.index({ player: 1, createdAt: -1 });
-gameSchema.index({ status: 1 });
-gameSchema.index({ gameType: 1 });
+// Indexes for better query performance
+gameSchema.index({ userId: 1, completedAt: -1 });
+gameSchema.index({ userId: 1, result: 1 });
+gameSchema.index({ userId: 1, gameType: 1 });
 
-// Method to calculate duration
-gameSchema.methods.calculateDuration = function() {
-  if (this.endTime && this.startTime) {
-    this.duration = Math.floor((this.endTime - this.startTime) / 1000);
+// Static method to get user statistics
+gameSchema.statics.getUserStats = async function(userId) {
+  const stats = await this.aggregate([
+    { $match: { userId: new mongoose.Types.ObjectId(userId) } },
+    {
+      $group: {
+        _id: null,
+        totalGames: { $sum: 1 },
+        wins: { $sum: { $cond: [{ $eq: ['$result', 'win'] }, 1, 0] } },
+        losses: { $sum: { $cond: [{ $eq: ['$result', 'loss'] }, 1, 0] } },
+        draws: { $sum: { $cond: [{ $eq: ['$result', 'draw'] }, 1, 0] } },
+        totalLines: { $sum: '$score.userLines' },
+        totalMoves: { $sum: '$score.totalMoves' },
+        totalDuration: { $sum: '$duration' },
+        averageScore: { $avg: '$score.userLines' },
+        averageMoves: { $avg: '$score.totalMoves' },
+        averageDuration: { $avg: '$duration' }
+      }
+    }
+  ]);
+
+  if (stats.length === 0) {
+    return {
+      totalGames: 0,
+      wins: 0,
+      losses: 0,
+      draws: 0,
+      winRate: 0,
+      totalLines: 0,
+      totalMoves: 0,
+      totalDuration: 0,
+      averageScore: 0,
+      averageMoves: 0,
+      averageDuration: 0
+    };
   }
-  return this.duration;
-};
 
-// Method to end game
-gameSchema.methods.endGame = function(won, finalScore = 0) {
-  this.endTime = new Date();
-  this.won = won;
-  this.score = finalScore;
-  this.status = 'completed';
-  this.calculateDuration();
-  return this.save();
-};
-
-// Method to add move
-gameSchema.methods.addMove = function(number, action) {
-  this.moves.push({
-    number,
-    action,
-    timestamp: new Date()
-  });
-  return this.save();
-};
-
-// Method to get game progress
-gameSchema.methods.getProgress = function() {
-  const totalNumbers = this.board.flat().length;
-  const markedCount = this.markedNumbers.length;
+  const stat = stats[0];
   return {
-    marked: markedCount,
-    total: totalNumbers,
-    percentage: Math.round((markedCount / totalNumbers) * 100)
+    totalGames: stat.totalGames,
+    wins: stat.wins,
+    losses: stat.losses,
+    draws: stat.draws,
+    winRate: Math.round((stat.wins / stat.totalGames) * 100),
+    totalLines: stat.totalLines,
+    totalMoves: stat.totalMoves,
+    totalDuration: stat.totalDuration,
+    averageScore: Math.round(stat.averageScore * 100) / 100,
+    averageMoves: Math.round(stat.averageMoves * 100) / 100,
+    averageDuration: Math.round(stat.averageDuration * 100) / 100
   };
 };
 
-// Static method to get leaderboard
-gameSchema.statics.getLeaderboard = async function(limit = 10) {
-  return await this.aggregate([
-    { $match: { status: 'completed', won: true } },
-    { $group: {
-      _id: '$player',
-      bestTime: { $min: '$duration' },
-      totalWins: { $sum: 1 },
-      averageScore: { $avg: '$score' }
-    }},
-    { $sort: { bestTime: 1 } },
-    { $limit: limit },
-    { $lookup: {
-      from: 'users',
-      localField: '_id',
-      foreignField: '_id',
-      as: 'player'
-    }},
-    { $unwind: '$player' },
-    { $project: {
-      username: '$player.username',
-      avatar: '$player.avatar',
-      bestTime: 1,
-      totalWins: 1,
-      averageScore: 1
-    }}
+// Static method to get recent games
+gameSchema.statics.getRecentGames = async function(userId, limit = 5) {
+  return await this.find({ userId })
+    .sort({ completedAt: -1 })
+    .limit(limit)
+    .select('result opponent score duration completedAt achievements gameType');
+};
+
+// Static method to get all games with pagination
+gameSchema.statics.getAllGames = async function(userId, page = 1, limit = 10) {
+  const skip = (page - 1) * limit;
+  
+  const [games, total] = await Promise.all([
+    this.find({ userId })
+      .sort({ completedAt: -1 })
+      .skip(skip)
+      .limit(limit)
+      .select('result opponent score duration completedAt achievements gameType'),
+    this.countDocuments({ userId })
   ]);
+
+  return {
+    games,
+    total,
+    page,
+    totalPages: Math.ceil(total / limit),
+    hasNext: page * limit < total,
+    hasPrev: page > 1
+  };
+};
+
+// Static method to get achievement statistics
+gameSchema.statics.getAchievementStats = async function(userId) {
+  const achievements = await this.aggregate([
+    { $match: { userId: new mongoose.Types.ObjectId(userId) } },
+    { $unwind: '$achievements' },
+    {
+      $group: {
+        _id: '$achievements',
+        count: { $sum: 1 },
+        lastEarned: { $max: '$completedAt' }
+      }
+    },
+    { $sort: { lastEarned: -1 } }
+  ]);
+
+  return achievements;
 };
 
 const Game = mongoose.model('Game', gameSchema);

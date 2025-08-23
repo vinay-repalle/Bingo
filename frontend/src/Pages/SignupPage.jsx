@@ -1,21 +1,36 @@
-import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { useTheme } from '../App';
 import { useAuth } from '../App';
 import Navbar from '../Components/Navbar';
+import OTPVerification from '../Components/OTPVerification';
 import apiService from '../services/api';
 
 function SignupPage() {
   const { isDarkMode } = useTheme();
   const { login } = useAuth();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  
   const [formData, setFormData] = useState({
     username: '',
     email: '',
     password: '',
     confirmPassword: ''
   });
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [showOTP, setShowOTP] = useState(false);
+  const [otpEmail, setOtpEmail] = useState('');
+  const [otpUsername, setOtpUsername] = useState('');
+
+  // Check for Google OAuth errors
+  useEffect(() => {
+    const googleError = searchParams.get('error');
+    if (googleError === 'google_auth_failed') {
+      setError('Google sign-up failed. Please try again or use email/password.');
+    }
+  }, [searchParams]);
 
   const handleChange = (e) => {
     setFormData({
@@ -24,13 +39,18 @@ function SignupPage() {
     });
   };
 
+  const handleGoogleSignup = () => {
+    setError(''); // Clear any previous errors
+    window.location.href = apiService.getGoogleAuthUrl();
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
 
     // Simple validation
     if (!formData.username || !formData.email || !formData.password || !formData.confirmPassword) {
-      setError('Please fill in all fields');
+      setError('Please provide all required fields');
       return;
     }
 
@@ -45,26 +65,48 @@ function SignupPage() {
     }
 
     try {
-      const response = await apiService.register({
-        username: formData.username,
-        email: formData.email,
-        password: formData.password
-      });
+      setLoading(true);
+      setError('');
 
-      // Store token
-      localStorage.setItem('token', response.data.token);
+      // Send OTP for verification
+      const response = await apiService.sendOTP(formData.email, 'verification');
       
-      // Update auth context
-      login(response.data.user);
-      navigate('/dashboard');
+      if (response.success) {
+        setOtpEmail(formData.email);
+        setOtpUsername(formData.username);
+        setShowOTP(true);
+      }
     } catch (error) {
-      setError(error.message || 'Registration failed. Please try again.');
+      setError(error.message || 'Failed to send verification code');
+    } finally {
+      setLoading(false);
     }
   };
 
-  const handleGoogleSignup = () => {
-    window.location.href = apiService.getGoogleAuthUrl();
+  const handleOTPSuccess = (data) => {
+    // User account created and verified successfully
+    login(data.user);
+    navigate('/dashboard');
   };
+
+  const handleOTPCancel = () => {
+    setShowOTP(false);
+    setOtpEmail('');
+    setOtpUsername('');
+  };
+
+  if (showOTP) {
+    return (
+      <OTPVerification
+        email={otpEmail}
+        username={otpUsername}
+        purpose="verification"
+        onSuccess={handleOTPSuccess}
+        onCancel={handleOTPCancel}
+        password={formData.password} // Pass the password from signup form
+      />
+    );
+  }
 
   return (
     <>
@@ -83,12 +125,12 @@ function SignupPage() {
             <h2 className={`text-3xl font-bold ${
               isDarkMode ? 'text-white' : 'text-gray-900'
             }`}>
-              Join the Adventure! 🚀
+                Join the Adventure! 🚀            
             </h2>
             <p className={`mt-2 text-sm ${
               isDarkMode ? 'text-gray-300' : 'text-gray-600'
             }`}>
-              Create your account and start playing Bingo
+              Create your account and start playing BingoV
             </p>
           </div>
 
@@ -196,13 +238,14 @@ function SignupPage() {
             <div className="space-y-3">
               <button
                 type="submit"
-                className={`group relative w-full flex justify-center py-3 px-4 border border-transparent text-sm font-medium rounded-lg text-white transition-all duration-300 transform hover:scale-105 ${
+                disabled={loading}
+                className={`group relative w-full flex justify-center py-3 px-4 border border-transparent text-sm font-medium rounded-lg text-white transition-all duration-300 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed ${
                   isDarkMode 
                     ? 'bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 shadow-lg shadow-cyan-500/25' 
                     : 'bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 shadow-lg shadow-blue-500/25'
                 }`}
               >
-                📝 Create Account
+                {loading ? 'Sending Code...' : '📝 Create Account'}
               </button>
               
               <div className="relative">

@@ -18,7 +18,7 @@ function Footer() {
               <h3 className={`text-2xl font-bold ${
                 isDarkMode ? 'text-cyan-400' : 'text-blue-600'
               }`}>
-                <span className="text-red-500">⚡</span> BINGO <span className="text-green-500">GAME</span>
+                <span className="text-red-500">⚡</span> BINGO<span className="text-green-500">V</span>
               </h3>
             </div>
             <p className={`mb-4 max-w-md ${
@@ -99,10 +99,10 @@ function Footer() {
         <div className={`border-t mt-8 pt-8 flex flex-col md:flex-row justify-between items-center ${
           isDarkMode ? 'border-gray-700' : 'border-gray-200'
         }`}>
-          <p className={`text-sm ${
+          <p className={`text-sm text-center ${
             isDarkMode ? 'text-gray-400' : 'text-gray-500'
           }`}>
-            © 2024 Bingo Game. All rights reserved.
+            © 2024 BingoV. All rights reserved.
           </p>
           <div className="flex space-x-6 mt-4 md:mt-0">
             <a href="#" className={`text-sm transition duration-300 ${

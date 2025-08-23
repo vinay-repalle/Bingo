@@ -50,6 +50,48 @@ class ApiService {
     });
   }
 
+  async sendOTP(email, purpose = 'verification') {
+    return this.request('/auth/send-otp', {
+      method: 'POST',
+      body: JSON.stringify({ email, purpose })
+    });
+  }
+
+  async verifyOTP(email, otp, username, password) {
+    return this.request('/auth/verify-otp', {
+      method: 'POST',
+      body: JSON.stringify({ email, otp, username, password })
+    });
+  }
+
+  async forgotPassword(email) {
+    return this.request('/auth/forgot-password', {
+      method: 'POST',
+      body: JSON.stringify({ email })
+    });
+  }
+
+  // Password reset
+  async resetPassword(email, otp, newPassword) {
+    try {
+      const response = await fetch(`${this.baseURL}/auth/reset-password`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email, otp, newPassword }),
+      });
+
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.message || 'Password reset failed');
+      }
+      return data;
+    } catch (error) {
+      throw error;
+    }
+  }
+
   async login(credentials) {
     return this.request('/auth/login', {
       method: 'POST',
@@ -86,31 +128,109 @@ class ApiService {
     });
   }
 
+  // Statistics API methods
   async getUserStats() {
-    return this.request('/users/stats');
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`${this.baseURL}/statistics/user`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      });
+
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.message || 'Failed to fetch statistics');
+      }
+      return data;
+    } catch (error) {
+      throw error;
+    }
   }
 
-  async getUserGames(page = 1, limit = 10, status) {
-    const params = new URLSearchParams({
-      page: page.toString(),
-      limit: limit.toString()
-    });
-    if (status) params.append('status', status);
-    
-    return this.request(`/users/games?${params}`);
+  async getUserGames(page = 1, limit = 10) {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`${this.baseURL}/statistics/games?page=${page}&limit=${limit}`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      });
+
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.message || 'Failed to fetch games');
+      }
+      return data;
+    } catch (error) {
+      throw error;
+    }
   }
 
-  async getLeaderboard(type = 'time', limit = 10) {
-    const params = new URLSearchParams({
-      type,
-      limit: limit.toString()
-    });
-    
-    return this.request(`/users/leaderboard?${params}`);
+  async getUserAchievements() {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`${this.baseURL}/statistics/achievements`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      });
+
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.message || 'Failed to fetch achievements');
+      }
+      return data;
+    } catch (error) {
+      throw error;
+    }
   }
 
-  async getUserById(userId) {
-    return this.request(`/users/${userId}`);
+  async getLeaderboard(limit = 10) {
+    try {
+      const response = await fetch(`${this.baseURL}/statistics/leaderboard?limit=${limit}`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.message || 'Failed to fetch leaderboard');
+      }
+      return data;
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  async saveGameResult(gameData) {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`${this.baseURL}/statistics/game`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(gameData),
+      });
+
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.message || 'Failed to save game result');
+      }
+      return data;
+    } catch (error) {
+      throw error;
+    }
   }
 
   // Game methods

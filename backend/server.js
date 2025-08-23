@@ -13,6 +13,8 @@ import { Strategy as GoogleStrategy } from 'passport-google-oauth20';
 import authRoutes from './routes/auth.js';
 import userRoutes from './routes/users.js';
 import gameRoutes from './routes/games.js';
+import statisticsRoutes from './routes/statistics.js';
+import Achievement from './models/Achievement.js';
 
 // Import database connection
 import connectDB from './config/database.js';
@@ -25,6 +27,19 @@ const PORT = process.env.PORT || 5000;
 
 // Connect to MongoDB
 connectDB();
+
+// Initialize achievements
+const initializeAchievements = async () => {
+  try {
+    await Achievement.initializeAchievements();
+    console.log('✅ Achievements initialized successfully');
+  } catch (error) {
+    console.error('❌ Failed to initialize achievements:', error);
+  }
+};
+
+// Initialize achievements after database connection
+setTimeout(initializeAchievements, 2000);
 
 // Security middleware
 app.use(helmet());
@@ -66,31 +81,18 @@ app.use(passport.session());
 passport.use(new GoogleStrategy({
   clientID: process.env.GOOGLE_CLIENT_ID,
   clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-  callbackURL: process.env.GOOGLE_CALLBACK_URL || "http://localhost:5000/api/auth/google/callback"
+  callbackURL: process.env.GOOGLE_CALLBACK_URL || "http://localhost:5000/api/auth/google/callback",
+  prompt: 'select_account' // Force account selection
 }, async (accessToken, refreshToken, profile, done) => {
   try {
     // Import User model here to avoid circular dependency
     const User = (await import('./models/User.js')).default;
     
-    // Check if user already exists
-    let user = await User.findOne({ googleId: profile.id });
-    
-    if (user) {
-      return done(null, user);
-    }
-    
-    // Create new user
-    user = new User({
-      googleId: profile.id,
-      username: profile.displayName,
-      email: profile.emails[0].value,
-      avatar: profile.photos[0].value,
-      isGoogleUser: true
-    });
-    
-    await user.save();
+    // Use the new static method to find or create user
+    const user = await User.findOrCreateGoogleUser(profile);
     return done(null, user);
   } catch (error) {
+    console.error('Google OAuth error:', error);
     return done(error, null);
   }
 }));
@@ -118,12 +120,13 @@ if (process.env.NODE_ENV === 'development') {
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/games', gameRoutes);
+app.use('/api/statistics', statisticsRoutes);
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {
   res.json({ 
     status: 'OK', 
-    message: 'Bingo Game Backend is running',
+    message: 'BingoV Backend is running',
     timestamp: new Date().toISOString()
   });
 });

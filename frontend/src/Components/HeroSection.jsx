@@ -46,13 +46,13 @@ function HeroSection() {
               <span className={`block transform hover:scale-105 transition duration-500 ${
                 isDarkMode ? 'text-cyan-400' : 'text-blue-600'
               }`}>
-                ⚡ BINGO
+                ⚡ BingoV
               </span>
-              <span className={`block transform hover:scale-105 transition duration-500 ${
+              {/* <span className={`block transform hover:scale-105 transition duration-500 ${
                 isDarkMode ? 'text-green-400' : 'text-green-600'
               }`}>
-                GAME
-              </span>
+                V
+              </span> */}
             </h1>
             <p className={`text-xl md:text-2xl mb-8 max-w-2xl mx-auto leading-relaxed ${
               isDarkMode ? 'text-gray-300' : 'text-gray-600'

@@ -1,19 +1,35 @@
-import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { useTheme } from '../App';
 import { useAuth } from '../App';
 import Navbar from '../Components/Navbar';
+import OTPVerification from '../Components/OTPVerification';
 import apiService from '../services/api';
 
 function LoginPage() {
   const { isDarkMode } = useTheme();
   const { login } = useAuth();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  
   const [formData, setFormData] = useState({
     email: '',
     password: ''
   });
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [showForgotPassword, setShowForgotPassword] = useState(false);
+  const [showOTP, setShowOTP] = useState(false);
+  const [otpEmail, setOtpEmail] = useState('');
+  const [forgotPasswordEmail, setForgotPasswordEmail] = useState('');
+
+  // Check for Google OAuth errors
+  useEffect(() => {
+    const googleError = searchParams.get('error');
+    if (googleError === 'google_auth_failed') {
+      setError('Google sign-in failed. Please try again or use email/password.');
+    }
+  }, [searchParams]);
 
   const handleChange = (e) => {
     setFormData({
@@ -22,36 +38,187 @@ function LoginPage() {
     });
   };
 
+  const handleGoogleLogin = () => {
+    setError(''); // Clear any previous errors
+    window.location.href = apiService.getGoogleAuthUrl();
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
 
     // Simple validation
     if (!formData.email || !formData.password) {
-      setError('Please fill in all fields');
+      setError('Please provide email and password');
       return;
     }
 
     try {
+      setLoading(true);
+      setError('');
+
       const response = await apiService.login({
         email: formData.email,
         password: formData.password
       });
-
-      // Store token
-      localStorage.setItem('token', response.data.token);
       
-      // Update auth context
-      login(response.data.user);
-      navigate('/dashboard');
+      if (response.success) {
+        // Store token
+        localStorage.setItem('token', response.data.token);
+        
+        // Update auth context
+        login(response.data.user);
+        navigate('/dashboard');
+      }
     } catch (error) {
       setError(error.message || 'Login failed. Please try again.');
+    } finally {
+      setLoading(false);
     }
   };
 
-  const handleGoogleLogin = () => {
-    window.location.href = apiService.getGoogleAuthUrl();
+  const handleForgotPassword = async (e) => {
+    e.preventDefault();
+    
+    if (!forgotPasswordEmail) {
+      setError('Please enter your email address');
+      return;
+    }
+
+    try {
+      setLoading(true);
+      setError('');
+
+      const response = await apiService.forgotPassword(forgotPasswordEmail);
+      
+      if (response.success) {
+        setOtpEmail(forgotPasswordEmail);
+        setShowOTP(true);
+        setShowForgotPassword(false);
+      }
+    } catch (error) {
+      setError(error.message || 'Failed to send password reset code');
+    } finally {
+      setLoading(false);
+    }
   };
+
+  const handleOTPSuccess = (data) => {
+    // Password reset successful
+    setShowOTP(false);
+    setOtpEmail('');
+    setForgotPasswordEmail('');
+    setError('');
+    // Show success message and redirect to login
+    setTimeout(() => {
+      navigate('/login');
+    }, 2000);
+  };
+
+  const handleOTPCancel = () => {
+    setShowOTP(false);
+    setOtpEmail('');
+    setForgotPasswordEmail('');
+  };
+
+  if (showOTP) {
+    return (
+      <OTPVerification
+        email={otpEmail}
+        purpose="password_reset"
+        onSuccess={handleOTPSuccess}
+        onCancel={handleOTPCancel}
+      />
+    );
+  }
+
+  if (showForgotPassword) {
+    return (
+      <div className={`fixed inset-0 z-50 flex items-center justify-center p-4 ${
+        isDarkMode ? 'bg-black/50' : 'bg-black/30'
+      }`}>
+        <div className={`relative max-w-md w-full rounded-2xl shadow-2xl transform transition-all duration-300 ${
+          isDarkMode 
+            ? 'bg-gray-800 border border-gray-600' 
+            : 'bg-white border border-gray-200'
+        }`}>
+          {/* Header */}
+          <div className={`p-6 border-b ${
+            isDarkMode ? 'border-gray-600' : 'border-gray-200'
+          }`}>
+            <div className="flex items-center justify-between">
+              <h2 className={`text-2xl font-bold ${
+                isDarkMode ? 'text-white' : 'text-gray-900'
+              }`}>
+                Forgot Password
+              </h2>
+              <button
+                onClick={() => setShowForgotPassword(false)}
+                className={`p-2 rounded-lg transition-colors ${
+                  isDarkMode 
+                    ? 'hover:bg-gray-700 text-gray-400 hover:text-white' 
+                    : 'hover:bg-gray-100 text-gray-500 hover:text-gray-700'
+                }`}
+              >
+                ✕
+              </button>
+            </div>
+            <p className={`mt-2 text-sm ${
+              isDarkMode ? 'text-gray-400' : 'text-gray-600'
+            }`}>
+              Enter your email address and we'll send you a code to reset your password.
+            </p>
+          </div>
+
+          {/* Content */}
+          <div className="p-6">
+            <form onSubmit={handleForgotPassword} className="space-y-6">
+              {/* Email */}
+              <div>
+                <label className={`block text-sm font-medium mb-2 ${
+                  isDarkMode ? 'text-gray-300' : 'text-gray-700'
+                }`}>
+                  Email Address
+                </label>
+                <input
+                  type="email"
+                  value={forgotPasswordEmail}
+                  onChange={(e) => setForgotPasswordEmail(e.target.value)}
+                  className={`w-full px-4 py-3 rounded-lg border-2 transition-all duration-200 ${
+                    isDarkMode
+                      ? 'bg-gray-700 border-gray-600 text-white focus:border-cyan-400 focus:ring-2 focus:ring-cyan-400/20'
+                      : 'bg-white border-gray-300 text-gray-900 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20'
+                  }`}
+                  placeholder="Enter your email address"
+                  required
+                />
+              </div>
+
+              {/* Error Message */}
+              {error && (
+                <div className="p-3 bg-red-100 border border-red-300 text-red-700 rounded-lg text-sm">
+                  {error}
+                </div>
+              )}
+
+              {/* Submit Button */}
+              <button
+                type="submit"
+                disabled={loading}
+                className={`w-full py-3 px-6 rounded-lg font-semibold transition-all duration-300 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed ${
+                  isDarkMode 
+                    ? 'bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 text-white shadow-lg shadow-cyan-500/25' 
+                    : 'bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white shadow-lg shadow-blue-500/25'
+                }`}
+              >
+                {loading ? 'Sending...' : 'Send Reset Code'}
+              </button>
+            </form>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <>
@@ -75,7 +242,7 @@ function LoginPage() {
             <p className={`mt-2 text-sm ${
               isDarkMode ? 'text-gray-300' : 'text-gray-600'
             }`}>
-              Sign in to continue your Bingo adventure
+              Sign in to continue your BingoV adventure
             </p>
           </div>
 
@@ -136,16 +303,32 @@ function LoginPage() {
               </div>
             </div>
 
+            {/* Forgot Password Link */}
+            <div className="text-right">
+              <button
+                type="button"
+                onClick={() => setShowForgotPassword(true)}
+                className={`text-sm font-medium transition-colors ${
+                  isDarkMode 
+                    ? 'text-cyan-400 hover:text-cyan-300' 
+                    : 'text-blue-600 hover:text-blue-500'
+                }`}
+              >
+                Forgot your password?
+              </button>
+            </div>
+
             <div className="space-y-3">
               <button
                 type="submit"
-                className={`group relative w-full flex justify-center py-3 px-4 border border-transparent text-sm font-medium rounded-lg text-white transition-all duration-300 transform hover:scale-105 ${
+                disabled={loading}
+                className={`group relative w-full flex justify-center py-3 px-4 border border-transparent text-sm font-medium rounded-lg text-white transition-all duration-300 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed ${
                   isDarkMode 
                     ? 'bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 shadow-lg shadow-cyan-500/25' 
                     : 'bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 shadow-lg shadow-blue-500/25'
                 }`}
               >
-                🔑 Sign In
+                {loading ? 'Signing In...' : '🔑 Sign In'}
               </button>
               
               <div className="relative">

@@ -1,34 +1,96 @@
-import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useTheme } from '../App';
 import { useAuth } from '../App';
 import Navbar from '../Components/Navbar';
-import Footer from '../Components/Footer';
+import UserStatistics from '../Components/UserStatistics';
+import Leaderboard from '../Components/Leaderboard';
+import apiService from '../services/api';
 
 function Dashboard() {
   const { isDarkMode } = useTheme();
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('overview');
+  const [editing, setEditing] = useState(false);
+  const [editUsername, setEditUsername] = useState(user?.username || '');
+  const [editAvatar, setEditAvatar] = useState(user?.avatar || '');
+  const [avatarFile, setAvatarFile] = useState(null);
+  const [profileError, setProfileError] = useState('');
+  const [profileSuccess, setProfileSuccess] = useState('');
+  const { login } = useAuth();
 
-  // Mock user stats - in real app, this would come from API
-  const userStats = {
-    gamesPlayed: 15,
-    gamesWon: 8,
-    totalScore: 1250,
-    bestTime: '2:34',
-    winRate: 53.3,
-    currentStreak: 3,
-    longestStreak: 5,
-    averageScore: 83.3
+  useEffect(() => {
+    if (!user) {
+      navigate('/login');
+    }
+  }, [user, navigate]);
+
+  const handleLogout = () => {
+    logout();
+    navigate('/');
   };
 
-  const recentGames = [
-    { id: 1, result: 'Won', score: 95, time: '3:12', date: '2024-01-15' },
-    { id: 2, result: 'Lost', score: 67, time: '4:05', date: '2024-01-14' },
-    { id: 3, result: 'Won', score: 88, time: '2:45', date: '2024-01-13' },
-    { id: 4, result: 'Won', score: 92, time: '2:58', date: '2024-01-12' },
-    { id: 5, result: 'Lost', score: 71, time: '3:45', date: '2024-01-11' }
-  ];
+  const handleStartGame = () => {
+    navigate('/game');
+  };
+
+  const handleEditClick = () => {
+    setEditing(true);
+    setEditUsername(user.username);
+    setEditAvatar(user.avatar || '');
+    setAvatarFile(null);
+    setProfileError('');
+    setProfileSuccess('');
+  };
+
+  const handleCancelEdit = () => {
+    setEditing(false);
+    setProfileError('');
+    setProfileSuccess('');
+  };
+
+  const handleAvatarChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setAvatarFile(file);
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setEditAvatar(reader.result);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleProfileSave = async (e) => {
+    e.preventDefault();
+    setProfileError('');
+    setProfileSuccess('');
+    try {
+      let avatarToSend = editAvatar;
+      // If a new file is selected, use its base64
+      if (avatarFile) {
+        avatarToSend = editAvatar;
+      }
+      const response = await apiService.updateUserProfile({
+        username: editUsername,
+        avatar: avatarToSend,
+      });
+      if (response.success) {
+        login(response.data.user); // update context
+        setProfileSuccess('Profile updated successfully!');
+        setEditing(false);
+      } else {
+        setProfileError(response.message || 'Failed to update profile');
+      }
+    } catch (err) {
+      setProfileError(err.message || 'Failed to update profile');
+    }
+  };
+
+  if (!user) {
+    return null;
+  }
 
   return (
     <>
@@ -36,251 +98,233 @@ function Dashboard() {
       <div className={`min-h-screen ${
         isDarkMode 
           ? 'bg-gradient-to-br from-gray-900 via-gray-800 to-black' 
-          : 'bg-gradient-to-br from-gray-50 via-blue-50 to-indigo-50'
+          : 'bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50'
       }`}>
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          {/* Welcome Section */}
-          <div className="mb-8">
-            <h1 className={`text-4xl font-bold mb-2 ${
+        <div className="container mx-auto px-4 py-8">
+          {/* Welcome Header */}
+          <div className="text-center mb-8">
+            <h1 className={`text-4xl md:text-5xl font-bold mb-4 ${
               isDarkMode ? 'text-white' : 'text-gray-900'
             }`}>
-              Welcome back, <span className={`${
-              isDarkMode ? 'text-cyan-400' : 'text-blue-600'
-            }`}>{user?.username || 'Player'}!</span> 🎮
+              Welcome back, {user.username}! 🎯
             </h1>
-            <p className={`text-lg ${
+            <p className={`text-xl ${
               isDarkMode ? 'text-gray-300' : 'text-gray-600'
             }`}>
-              Ready for another Bingo adventure?
+              Ready for another BingoV adventure?
             </p>
           </div>
 
-          {/* Quick Actions */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-            <Link to="/game" className={`p-6 rounded-xl border-2 transform hover:scale-105 transition-all duration-300 ${
-              isDarkMode 
-                ? 'bg-gray-800/50 border-gray-600 backdrop-blur-sm hover:border-cyan-500' 
-                : 'bg-white/50 border-gray-200 backdrop-blur-sm hover:border-blue-500'
-            }`}>
-              <div className="text-center">
-                <div className="text-4xl mb-4">🎮</div>
-                <h3 className={`text-xl font-bold mb-2 ${
-                  isDarkMode ? 'text-white' : 'text-gray-900'
-                }`}>Play Game</h3>
-                <p className={`${
-                  isDarkMode ? 'text-gray-300' : 'text-gray-600'
-                }`}>Start a new Bingo game</p>
-              </div>
-            </Link>
-
-            <div className={`p-6 rounded-xl border-2 ${
-              isDarkMode 
-                ? 'bg-gray-800/50 border-gray-600 backdrop-blur-sm' 
-                : 'bg-white/50 border-gray-200 backdrop-blur-sm'
-            }`}>
-              <div className="text-center">
-                <div className="text-4xl mb-4">🏆</div>
-                <h3 className={`text-xl font-bold mb-2 ${
-                  isDarkMode ? 'text-white' : 'text-gray-900'
-                }`}>Leaderboard</h3>
-                <p className={`${
-                  isDarkMode ? 'text-gray-300' : 'text-gray-600'
-                }`}>View your ranking</p>
-              </div>
-            </div>
-
-            <div className={`p-6 rounded-xl border-2 ${
-              isDarkMode 
-                ? 'bg-gray-800/50 border-gray-600 backdrop-blur-sm' 
-                : 'bg-white/50 border-gray-200 backdrop-blur-sm'
-            }`}>
-              <div className="text-center">
-                <div className="text-4xl mb-4">⚙️</div>
-                <h3 className={`text-xl font-bold mb-2 ${
-                  isDarkMode ? 'text-white' : 'text-gray-900'
-                }`}>Settings</h3>
-                <p className={`${
-                  isDarkMode ? 'text-gray-300' : 'text-gray-600'
-                }`}>Manage your account</p>
-              </div>
+          {/* Tab Navigation */}
+          <div className="flex justify-center mb-8">
+            <div className={`flex rounded-lg p-1 ${
+              isDarkMode ? 'bg-gray-700' : 'bg-white'
+            } shadow-lg`}>
+              <button
+                onClick={() => setActiveTab('overview')}
+                className={`px-6 py-3 rounded-lg font-medium transition-all duration-300 ${
+                  activeTab === 'overview'
+                    ? isDarkMode
+                      ? 'bg-blue-600 text-white shadow-lg'
+                      : 'bg-blue-500 text-white shadow-lg'
+                    : isDarkMode
+                      ? 'text-gray-300 hover:text-white'
+                      : 'text-gray-600 hover:text-gray-900'
+                }`}
+              >
+                Overview
+              </button>
+              <button
+                onClick={() => setActiveTab('statistics')}
+                className={`px-6 py-3 rounded-lg font-medium transition-all duration-300 ${
+                  activeTab === 'statistics'
+                    ? isDarkMode
+                      ? 'bg-blue-600 text-white shadow-lg'
+                      : 'bg-blue-500 text-white shadow-lg'
+                    : isDarkMode
+                      ? 'text-gray-300 hover:text-white'
+                      : 'text-gray-600 hover:text-gray-900'
+                }`}
+              >
+                Statistics
+              </button>
             </div>
           </div>
 
-          {/* Stats Overview */}
-          <div className={`rounded-xl p-6 border-2 mb-8 ${
-            isDarkMode 
-              ? 'bg-gray-800/50 border-gray-600 backdrop-blur-sm' 
-              : 'bg-white/50 border-gray-200 backdrop-blur-sm'
-          }`}>
-            <h2 className={`text-2xl font-bold mb-6 ${
-              isDarkMode ? 'text-white' : 'text-gray-900'
-            }`}>Your Statistics</h2>
-            
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-              <div className="text-center">
-                <div className={`text-3xl font-bold mb-2 ${
+          {/* Tab Content */}
+          {activeTab === 'overview' && (
+            <div className="max-w-4xl mx-auto">
+              {/* User Info - moved to top */}
+              <div className={`rounded-2xl p-8 shadow-2xl mb-8 ${
+                isDarkMode 
+                  ? 'bg-gray-800/50 border border-gray-600 backdrop-blur-sm' 
+                  : 'bg-white/50 border border-gray-200 backdrop-blur-sm'
+              }`}>
+                <h2 className={`text-3xl font-bold text-center mb-8 ${
                   isDarkMode ? 'text-cyan-400' : 'text-blue-600'
-                }`}>{userStats.gamesPlayed}</div>
-                <div className={`text-sm ${
-                  isDarkMode ? 'text-gray-300' : 'text-gray-600'
-                }`}>Games Played</div>
-              </div>
-              
-              <div className="text-center">
-                <div className={`text-3xl font-bold mb-2 ${
-                  isDarkMode ? 'text-green-400' : 'text-green-600'
-                }`}>{userStats.gamesWon}</div>
-                <div className={`text-sm ${
-                  isDarkMode ? 'text-gray-300' : 'text-gray-600'
-                }`}>Games Won</div>
-              </div>
-              
-              <div className="text-center">
-                <div className={`text-3xl font-bold mb-2 ${
-                  isDarkMode ? 'text-purple-400' : 'text-purple-600'
-                }`}>{userStats.winRate}%</div>
-                <div className={`text-sm ${
-                  isDarkMode ? 'text-gray-300' : 'text-gray-600'
-                }`}>Win Rate</div>
-              </div>
-              
-              <div className="text-center">
-                <div className={`text-3xl font-bold mb-2 ${
-                  isDarkMode ? 'text-yellow-400' : 'text-yellow-600'
-                }`}>{userStats.totalScore}</div>
-                <div className={`text-sm ${
-                  isDarkMode ? 'text-gray-300' : 'text-gray-600'
-                }`}>Total Score</div>
-              </div>
-            </div>
-          </div>
-
-          {/* Recent Games */}
-          <div className={`rounded-xl p-6 border-2 mb-8 ${
-            isDarkMode 
-              ? 'bg-gray-800/50 border-gray-600 backdrop-blur-sm' 
-              : 'bg-white/50 border-gray-200 backdrop-blur-sm'
-          }`}>
-            <h2 className={`text-2xl font-bold mb-6 ${
-              isDarkMode ? 'text-white' : 'text-gray-900'
-            }`}>Recent Games</h2>
-            
-            <div className="space-y-4">
-              {recentGames.map((game) => (
-                <div key={game.id} className={`flex items-center justify-between p-4 rounded-lg border ${
-                  isDarkMode 
-                    ? 'bg-gray-700/50 border-gray-600' 
-                    : 'bg-gray-50 border-gray-200'
                 }`}>
-                  <div className="flex items-center space-x-4">
-                    <div className={`w-3 h-3 rounded-full ${
-                      game.result === 'Won' 
-                        ? (isDarkMode ? 'bg-green-400' : 'bg-green-500')
-                        : (isDarkMode ? 'bg-red-400' : 'bg-red-500')
-                    }`}></div>
-                    <div>
+                  Your Profile
+                </h2>
+                <div className="flex justify-end mb-2">
+                  {!editing && (
+                    <button
+                      className="px-4 py-2 rounded-lg font-medium bg-blue-500 text-white hover:bg-blue-600 transition-all"
+                      onClick={handleEditClick}
+                    >
+                      Edit
+                    </button>
+                  )}
+                </div>
+                {profileError && (
+                  <div className="text-red-500 text-center mb-2">{profileError}</div>
+                )}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                  <div className="text-center">
+                    <div className={`w-24 h-24 mx-auto mb-4 rounded-full flex items-center justify-center text-3xl ${
+                      isDarkMode ? 'bg-gray-700' : 'bg-gray-200'
+                    }`}>
+                      {editing ? (
+                        <>
+                          {editAvatar ? (
+                            <img src={editAvatar} alt="Avatar" className="w-24 h-24 rounded-full object-cover" />
+                          ) : (
+                            '👤'
+                          )}
+                          <input
+                            type="file"
+                            accept="image/*"
+                            className="mt-2 block mx-auto text-sm"
+                            onChange={handleAvatarChange}
+                          />
+                        </>
+                      ) : user.avatar ? (
+                        <img src={user.avatar} alt="Avatar" className="w-24 h-24 rounded-full object-cover" />
+                      ) : (
+                        '👤'
+                      )}
+                    </div>
+                    {editing ? (
+                      <input
+                        type="text"
+                        className={`text-2xl font-bold mb-2 w-full text-center rounded-lg px-2 py-1 ${
+                          isDarkMode ? 'bg-gray-700 text-white' : 'bg-gray-100 text-gray-900'
+                        }`}
+                        value={editUsername}
+                        onChange={e => setEditUsername(e.target.value)}
+                        maxLength={24}
+                      />
+                    ) : (
+                      <h3 className={`text-2xl font-bold mb-2 ${
+                        isDarkMode ? 'text-white' : 'text-gray-900'
+                      }`}>
+                        {user.username}
+                      </h3>
+                    )}
+                    <p className={`${
+                      isDarkMode ? 'text-gray-300' : 'text-gray-600'
+                    }`}>
+                      {user.email}
+                    </p>
+                  </div>
+                  <div className="space-y-4">
+                    <div className={`p-4 rounded-lg ${
+                      isDarkMode ? 'bg-gray-700' : 'bg-gray-100'
+                    }`}>
                       <div className={`font-semibold ${
                         isDarkMode ? 'text-white' : 'text-gray-900'
                       }`}>
-                        {game.result} - Score: {game.score}
+                        Account Status
                       </div>
                       <div className={`text-sm ${
                         isDarkMode ? 'text-gray-300' : 'text-gray-600'
                       }`}>
-                        Time: {game.time} • {game.date}
+                        {user.isVerified ? '✅ Verified' : '⏳ Pending Verification'}
                       </div>
                     </div>
-                  </div>
-                  <div className={`text-sm font-medium ${
-                    game.result === 'Won' 
-                      ? (isDarkMode ? 'text-green-400' : 'text-green-600')
-                      : (isDarkMode ? 'text-red-400' : 'text-red-600')
-                  }`}>
-                    {game.result}
+                    <div className={`p-4 rounded-lg ${
+                      isDarkMode ? 'bg-gray-700' : 'bg-gray-100'
+                    }`}>
+                      <div className={`font-semibold ${
+                        isDarkMode ? 'text-white' : 'text-gray-900'
+                      }`}>
+                        Member Since
+                      </div>
+                      <div className={`text-sm ${
+                        isDarkMode ? 'text-gray-300' : 'text-gray-600'
+                      }`}>
+                        {new Date(user.createdAt).toLocaleDateString()}
+                      </div>
+                    </div>
+                    {editing && (
+                      <div className="flex space-x-2">
+                        <button
+                          className="px-4 py-2 rounded-lg font-medium bg-green-500 text-white hover:bg-green-600 transition-all"
+                          onClick={handleProfileSave}
+                        >
+                          Save
+                        </button>
+                        <button
+                          className="px-4 py-2 rounded-lg font-medium bg-gray-400 text-white hover:bg-gray-500 transition-all"
+                          onClick={handleCancelEdit}
+                        >
+                          Cancel
+                        </button>
+                      </div>
+                    )}
                   </div>
                 </div>
-              ))}
-            </div>
-          </div>
+              </div>
 
-          {/* Achievements */}
-          <div className={`rounded-xl p-6 border-2 ${
-            isDarkMode 
-              ? 'bg-gray-800/50 border-gray-600 backdrop-blur-sm' 
-              : 'bg-white/50 border-gray-200 backdrop-blur-sm'
-          }`}>
-            <h2 className={`text-2xl font-bold mb-6 ${
-              isDarkMode ? 'text-white' : 'text-gray-900'
-            }`}>Achievements</h2>
-            
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <div className={`p-4 rounded-lg border-2 ${
+              {/* Quick Actions */}
+              <div className={`rounded-2xl p-8 shadow-2xl mb-8 ${
                 isDarkMode 
-                  ? 'bg-gray-700/50 border-gray-600' 
-                  : 'bg-gray-50 border-gray-200'
+                  ? 'bg-gray-800/50 border border-gray-600 backdrop-blur-sm' 
+                  : 'bg-white/50 border border-gray-200 backdrop-blur-sm'
               }`}>
-                <div className="text-center">
-                  <div className="text-3xl mb-2">🎯</div>
-                  <h3 className={`font-semibold mb-1 ${
-                    isDarkMode ? 'text-white' : 'text-gray-900'
-                  }`}>First Win</h3>
-                  <p className={`text-sm ${
-                    isDarkMode ? 'text-gray-300' : 'text-gray-600'
-                  }`}>Win your first game</p>
-                  <div className={`mt-2 text-xs px-2 py-1 rounded ${
-                    isDarkMode ? 'bg-green-900/50 text-green-300' : 'bg-green-100 text-green-700'
+                <h2 className={`text-3xl font-bold text-center mb-8 ${
+                  isDarkMode ? 'text-cyan-400' : 'text-blue-600'
+                }`}>
+                  Quick Actions
+                </h2>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <button
+                    onClick={handleStartGame}
+                    className={`p-8 rounded-xl text-center transition-all duration-300 transform hover:scale-105 ${
+                      isDarkMode 
+                        ? 'bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 text-white shadow-lg shadow-cyan-500/25' 
+                        : 'bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white shadow-lg shadow-blue-500/25'
+                    }`}
+                  >
+                    <div className="text-4xl mb-4">🎮</div>
+                    <div className="text-xl font-bold mb-2">Start a new BingoV game</div>
+                    <div className="text-sm opacity-90">Challenge the computer!</div>
+                  </button>
+                  <div className={`p-8 rounded-xl text-center ${
+                    isDarkMode ? 'bg-gray-700' : 'bg-gray-100'
                   }`}>
-                    ✓ Completed
+                    <div className="text-4xl mb-4">🏆</div>
+                    <div className={`text-xl font-bold mb-2 ${
+                      isDarkMode ? 'text-white' : 'text-gray-900'
+                    }`}>Leaderboard</div>
+                    <div className={`text-sm ${
+                      isDarkMode ? 'text-gray-300' : 'text-gray-600'
+                    }`}>See top players below!</div>
                   </div>
                 </div>
               </div>
-              
-              <div className={`p-4 rounded-lg border-2 ${
-                isDarkMode 
-                  ? 'bg-gray-700/50 border-gray-600' 
-                  : 'bg-gray-50 border-gray-200'
-              }`}>
-                <div className="text-center">
-                  <div className="text-3xl mb-2">🔥</div>
-                  <h3 className={`font-semibold mb-1 ${
-                    isDarkMode ? 'text-white' : 'text-gray-900'
-                  }`}>Hot Streak</h3>
-                  <p className={`text-sm ${
-                    isDarkMode ? 'text-gray-300' : 'text-gray-600'
-                  }`}>Win 5 games in a row</p>
-                  <div className={`mt-2 text-xs px-2 py-1 rounded ${
-                    isDarkMode ? 'bg-yellow-900/50 text-yellow-300' : 'bg-yellow-100 text-yellow-700'
-                  }`}>
-                    In Progress (3/5)
-                  </div>
-                </div>
-              </div>
-              
-              <div className={`p-4 rounded-lg border-2 ${
-                isDarkMode 
-                  ? 'bg-gray-700/50 border-gray-600' 
-                  : 'bg-gray-50 border-gray-200'
-              }`}>
-                <div className="text-center">
-                  <div className="text-3xl mb-2">⚡</div>
-                  <h3 className={`font-semibold mb-1 ${
-                    isDarkMode ? 'text-white' : 'text-gray-900'
-                  }`}>Speed Demon</h3>
-                  <p className={`text-sm ${
-                    isDarkMode ? 'text-gray-300' : 'text-gray-600'
-                  }`}>Win in under 2 minutes</p>
-                  <div className={`mt-2 text-xs px-2 py-1 rounded ${
-                    isDarkMode ? 'bg-gray-700 text-gray-400' : 'bg-gray-200 text-gray-600'
-                  }`}>
-                    Locked
-                  </div>
-                </div>
+
+              {/* Leaderboard */}
+              <div className="mt-8">
+                <Leaderboard />
               </div>
             </div>
-          </div>
+          )}
+
+          {activeTab === 'statistics' && (
+            <UserStatistics />
+          )}
         </div>
       </div>
-      <Footer />
     </>
   );
 }

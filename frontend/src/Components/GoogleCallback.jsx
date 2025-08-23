@@ -37,7 +37,30 @@ function GoogleCallback() {
           navigate('/login?error=google_auth_failed');
         }
       } else {
-        navigate('/login');
+        // Check if we're already on the callback route with token in URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const urlToken = urlParams.get('token');
+        
+        if (urlToken) {
+          try {
+            // Store the token
+            localStorage.setItem('token', urlToken);
+            
+            // Get user data
+            const response = await apiService.getCurrentUser();
+            
+            // Update auth context
+            login(response.data.user);
+            
+            // Navigate to dashboard
+            navigate('/dashboard');
+          } catch (error) {
+            console.error('Google callback error:', error);
+            navigate('/login?error=google_auth_failed');
+          }
+        } else {
+          navigate('/login');
+        }
       }
     };
 

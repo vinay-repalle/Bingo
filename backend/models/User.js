@@ -27,11 +27,13 @@ const userSchema = new mongoose.Schema({
   googleId: {
     type: String,
     unique: true,
-    sparse: true
+    sparse: true,
+    index: true
   },
   isGoogleUser: {
     type: Boolean,
-    default: false
+    default: false,
+    index: true
   },
   avatar: {
     type: String,
@@ -40,6 +42,14 @@ const userSchema = new mongoose.Schema({
   isVerified: {
     type: Boolean,
     default: false
+  },
+  emailVerificationOTP: {
+    type: String,
+    default: null
+  },
+  emailVerificationExpires: {
+    type: Date,
+    default: null
   },
   stats: {
     gamesPlayed: {
@@ -90,8 +100,9 @@ const userSchema = new mongoose.Schema({
   timestamps: true
 });
 
-// Index for better query performance
-// Removed duplicate indexes - unique constraints already create indexes
+// Compound index to handle Google users better
+userSchema.index({ email: 1, isGoogleUser: 1 });
+userSchema.index({ username: 1, isGoogleUser: 1 });
 
 // Hash password before saving
 userSchema.pre('save', async function(next) {
@@ -149,11 +160,63 @@ userSchema.methods.getPublicProfile = function() {
   return {
     id: this._id,
     username: this.username,
+    email: this.email,
     avatar: this.avatar,
+    isVerified: this.isVerified,
     stats: this.stats,
     preferences: this.preferences,
     createdAt: this.createdAt
   };
+};
+
+// Static method to find or create Google user
+userSchema.statics.findOrCreateGoogleUser = async function(googleProfile) {
+  try {
+    // First try to find by googleId
+    let user = await this.findOne({ googleId: googleProfile.id });
+    if (user) {
+      // Update last active
+      user.lastActive = new Date();
+      await user.save();
+      return user;
+    }
+
+    // Then try to find by email (for users who might have signed up with email first)
+    user = await this.findOne({ email: googleProfile.emails[0].value });
+    if (user) {
+      // Link existing user to Google account
+      user.googleId = googleProfile.id;
+      user.isGoogleUser = true;
+      user.avatar = googleProfile.photos[0].value;
+      user.lastActive = new Date();
+      await user.save();
+      return user;
+    }
+
+    // Create new user with unique username
+    let username = googleProfile.displayName;
+    let counter = 1;
+    
+    // Ensure username is unique
+    while (await this.findOne({ username })) {
+      username = `${googleProfile.displayName}${counter}`;
+      counter++;
+    }
+
+    user = new this({
+      googleId: googleProfile.id,
+      username: username,
+      email: googleProfile.emails[0].value,
+      avatar: googleProfile.photos[0].value,
+      isGoogleUser: true,
+      isVerified: true // Google users are automatically verified
+    });
+
+    await user.save();
+    return user;
+  } catch (error) {
+    throw error;
+  }
 };
 
 // Virtual for win rate

@@ -17,7 +17,7 @@ function AboutSection() {
           }`}>
             About Our <span className={`${
               isDarkMode ? 'text-cyan-400' : 'text-blue-600'
-            }`}>Bingo Game</span>
+            }`}>BingoV</span>
           </h2>
           <p className={`text-xl max-w-3xl mx-auto ${
             isDarkMode ? 'text-gray-300' : 'text-gray-600'

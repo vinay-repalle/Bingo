@@ -22,7 +22,7 @@ function HowToPlaySection() {
           <p className={`text-xl max-w-3xl mx-auto ${
             isDarkMode ? 'text-gray-300' : 'text-gray-600'
           }`}>
-            Learn the rules and start playing in minutes! Our Bingo game is easy to understand 
+            Learn the rules and start playing in minutes! Our BingoV is easy to understand 
             and fun for players of all ages.
           </p>
         </div>
@@ -49,7 +49,7 @@ function HowToPlaySection() {
             <p className={`text-center leading-relaxed ${
               isDarkMode ? 'text-gray-300' : 'text-gray-600'
             }`}>
-              Each player receives a unique 5x5 Bingo card with random numbers from 1-75.
+              Each player receives a unique 5x5 Bingo card with random numbers from 1-25.
             </p>
           </div>
           

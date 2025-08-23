@@ -1,417 +1,553 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTheme } from '../App';
 import { useAuth } from '../App';
 import Navbar from '../Components/Navbar';
-
-function createBingoBoard() {
-  const numbers = [];
-  while (numbers.length < 25) {
-    const n = Math.floor(Math.random() * 25) + 1;
-    if (!numbers.includes(n)) numbers.push(n);
-  }
-  return Array.from({ length: 5 }, (_, i) => numbers.slice(i * 5, i * 5 + 5));
-}
-
-function markNumber(board, number) {
-  return board.map(row => row.map(cell => (cell === number ? 0 : cell)));
-}
-
-function checkBingo(board, state) {
-  let newBingo = 0;
-  const { Rows, Columns, frontDiagonal, backDiagonal } = state;
-  // Row check
-  for (let row = 0; row < 5; row++) {
-    if (!Rows.has(row) && board[row].every(cell => cell === 0)) {
-      Rows.add(row);
-      newBingo++;
-    }
-  }
-  // Column check
-  for (let col = 0; col < 5; col++) {
-    if (!Columns.has(col) && board.every(row => row[col] === 0)) {
-      Columns.add(col);
-      newBingo++;
-    }
-  }
-  // Back diagonal
-  if (!backDiagonal.value && [0,1,2,3,4].every(i => board[i][i] === 0)) {
-    backDiagonal.value = true;
-    newBingo++;
-  }
-  // Front diagonal
-  if (!frontDiagonal.value && [0,1,2,3,4].every(i => board[i][4-i] === 0)) {
-    frontDiagonal.value = true;
-    newBingo++;
-  }
-  return newBingo;
-}
-
-function getAllUncalledNumbers(board, calledNumbers) {
-  return board.flat().filter(n => n !== 0 && !calledNumbers.includes(n));
-}
+import apiService from '../services/api';
 
 function GamePage() {
   const { isDarkMode } = useTheme();
   const { user } = useAuth();
   const navigate = useNavigate();
   
-  const [gameState, setGameState] = useState('waiting'); // waiting, playing, won, lost
-  const [playerBoard, setPlayerBoard] = useState([]);
-  const [computerBoard, setComputerBoard] = useState([]);
+  // Game state
+  const [gameStarted, setGameStarted] = useState(false);
+  const [gameOver, setGameOver] = useState(false);
+  const [winner, setWinner] = useState(null);
+  const [currentTurn, setCurrentTurn] = useState('user'); // 'user' or 'computer'
   const [calledNumbers, setCalledNumbers] = useState([]);
-  const [gameTimer, setGameTimer] = useState(0);
-  const [playerState, setPlayerState] = useState({
-    Rows: new Set(),
-    Columns: new Set(),
-    frontDiagonal: { value: false },
-    backDiagonal: { value: false },
-  });
-  const [computerState, setComputerState] = useState({
-    Rows: new Set(),
-    Columns: new Set(),
-    frontDiagonal: { value: false },
-    backDiagonal: { value: false },
-  });
-  const [isPlayerTurn, setIsPlayerTurn] = useState(true);
-  const [lastComputerNumber, setLastComputerNumber] = useState(null);
-  const [playerBingo, setPlayerBingo] = useState(0);
-  const [computerBingo, setComputerBingo] = useState(0);
+  const [userBoard, setUserBoard] = useState([]);
+  const [computerBoard, setComputerBoard] = useState([]);
+  const [userLines, setUserLines] = useState(0); // Track user's completed lines
+  const [computerLines, setComputerLines] = useState(0); // Track computer's completed lines
+  const [showComputerBoard, setShowComputerBoard] = useState(false);
+  const [showCelebration, setShowCelebration] = useState(false);
+  const [gameStartTime, setGameStartTime] = useState(null);
+  const [showSaveSuccess, setShowSaveSuccess] = useState(false);
 
-  const generateBoard = () => createBingoBoard();
+  // --- Helpers to generate different boards ---
+  const generateBoard = () => { // helper to create a random 5x5 board
+    const nums = Array.from({ length: 25 }, (_, i) => i + 1);
+    for (let i = nums.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [nums[i], nums[j]] = [nums[j], nums[i]];
+    }
+    const board = [];
+    for (let r = 0; r < 5; r++) board.push(nums.slice(r * 5, (r + 1) * 5));
+    return board;
+  };
 
-  const startGame = () => {
-    setPlayerBoard(generateBoard());
-    setComputerBoard(generateBoard());
+  // Initialize game boards
+  const initializeGame = useCallback(() => {
+    // build two distinct boards
+    const userBoardData = generateBoard();
+    let computerBoardData = generateBoard();
+    while (JSON.stringify(computerBoardData) === JSON.stringify(userBoardData)) {
+      computerBoardData = generateBoard();
+    }
+
+    setUserBoard(userBoardData);
+    setComputerBoard(computerBoardData);
     setCalledNumbers([]);
-    setGameTimer(0);
-    setPlayerState({
-      Rows: new Set(),
-      Columns: new Set(),
-      frontDiagonal: { value: false },
-      backDiagonal: { value: false },
-    });
-    setComputerState({
-      Rows: new Set(),
-      Columns: new Set(),
-      frontDiagonal: { value: false },
-      backDiagonal: { value: false },
-    });
-    setPlayerBingo(0);
-    setComputerBingo(0);
-    setGameState('playing');
-    setIsPlayerTurn(true);
-    setLastComputerNumber(null);
+    setGameStarted(true);
+    setGameOver(false);
+    setWinner(null);
+    setCurrentTurn('user');
+    setUserLines(0);
+    setComputerLines(0);
+    setShowComputerBoard(false);
+    setShowCelebration(false);
+    setGameStartTime(Date.now());
+  }, []);
+
+  // Save game result to backend
+  const saveGameResult = async (result, finalUserLines, finalComputerLines) => {
+    try {
+      if (!user) return; // Don't save if no user logged in
+      
+      const gameDuration = Math.floor((Date.now() - gameStartTime) / 1000); // in seconds
+      
+      const gameData = {
+        result,
+        opponent: 'computer',
+        score: {
+          userLines: finalUserLines,
+          opponentLines: finalComputerLines,
+          totalMoves: calledNumbers.length
+        },
+        duration: gameDuration
+      };
+
+      await apiService.saveGameResult(gameData);
+      console.log('Game result saved successfully');
+      setShowSaveSuccess(true);
+      // Hide success message after 3 seconds
+      setTimeout(() => setShowSaveSuccess(false), 3000);
+    } catch (error) {
+      console.error('Failed to save game result:', error);
+    }
   };
 
-  // Player selects a number by clicking
-  const handlePlayerNumberClick = (number) => {
-    if (!isPlayerTurn || calledNumbers.includes(number) || number === 0 || gameState !== 'playing') return;
-    processTurn(number, true);
-  };
-
-  // Computer picks a number randomly from its uncalled numbers
-  const computerTurn = (updatedPlayerBoard, updatedComputerBoard, updatedCalledNumbers) => {
-    const availableNumbers = getAllUncalledNumbers(computerBoard, updatedCalledNumbers);
-    if (availableNumbers.length === 0) return;
-    const randomNumber = availableNumbers[Math.floor(Math.random() * availableNumbers.length)];
-    setTimeout(() => {
-      processTurn(randomNumber, false, updatedPlayerBoard, updatedComputerBoard, updatedCalledNumbers);
-      setLastComputerNumber(randomNumber);
-    }, 700); // Small delay for UX
-  };
-
-  // Process a turn (player or computer)
-  const processTurn = (number, isPlayer, prevPlayerBoard, prevComputerBoard, prevCalledNumbers) => {
-    const pBoard = prevPlayerBoard || playerBoard;
-    const cBoard = prevComputerBoard || computerBoard;
-    const cNumbers = prevCalledNumbers || calledNumbers;
-    const newCalledNumbers = [...cNumbers, number];
-    const newPlayerBoard = markNumber(pBoard, number);
-    const newComputerBoard = markNumber(cBoard, number);
-    setPlayerBoard(newPlayerBoard);
-    setComputerBoard(newComputerBoard);
-    setCalledNumbers(newCalledNumbers);
-    // Check for new bingos
-    const playerNewBingo = checkBingo(newPlayerBoard, playerState);
-    const computerNewBingo = checkBingo(newComputerBoard, computerState);
-    const updatedPlayerBingo = playerBingo + playerNewBingo;
-    const updatedComputerBingo = computerBingo + computerNewBingo;
-    setPlayerBingo(updatedPlayerBingo);
-    setComputerBingo(updatedComputerBingo);
-    if (updatedPlayerBingo >= 5 && updatedComputerBingo >= 5) {
-      setGameState('draw');
-    } else if (updatedPlayerBingo >= 5) {
-      setGameState('won');
-    } else if (updatedComputerBingo >= 5) {
-      setGameState('lost');
-    } else if (newCalledNumbers.length === 25) {
-      setGameState('draw');
-    } else {
-      setIsPlayerTurn(!isPlayer);
-      if (isPlayer) {
-        // Computer's turn next
-        computerTurn(newPlayerBoard, newComputerBoard, newCalledNumbers);
+  // Check how many lines are completed for a board
+  // accepts an explicit called set to avoid stale state issues
+  const checkCompletedLines = useCallback((board, calledSet) => {
+    let completedLines = 0;
+    
+    // rows
+    for (let row = 0; row < 5; row++) {
+      let all = true;
+      for (let col = 0; col < 5; col++) {
+        if (!calledSet.has(board[row][col])) { all = false; break; }
       }
+      if (all) completedLines++;
     }
+    
+    // cols
+    for (let col = 0; col < 5; col++) {
+      let all = true;
+      for (let row = 0; row < 5; row++) {
+        if (!calledSet.has(board[row][col])) { all = false; break; }
+      }
+      if (all) completedLines++;
+    }
+    
+    // main diag
+    let diag1 = true;
+    for (let i = 0; i < 5; i++) { if (!calledSet.has(board[i][i])) { diag1 = false; break; } }
+    if (diag1) completedLines++;
+    
+    // anti diag
+    let diag2 = true;
+    for (let i = 0; i < 5; i++) { if (!calledSet.has(board[i][4 - i])) { diag2 = false; break; } }
+    if (diag2) completedLines++;
+    
+    return completedLines;
+  }, []);
+
+  // Handle user clicking on their board
+  const handleUserBoardClick = (number) => {
+    if (currentTurn !== 'user' || gameOver || calledNumbers.includes(number)) {
+      return;
+    }
+    
+    // Add number to called numbers
+    const newCalledNumbers = [...calledNumbers, number];
+    setCalledNumbers(newCalledNumbers);
+
+    // use the *new* called numbers when checking lines
+    const calledSet = new Set(newCalledNumbers);
+
+    // update user lines
+    const newUserLines = checkCompletedLines(userBoard, calledSet);
+    setUserLines(newUserLines);
+
+    // also update computer lines after this call (both boards hear the same call)
+    const maybeComputerLines = checkCompletedLines(computerBoard, calledSet);
+    setComputerLines(maybeComputerLines);
+    
+    // stop immediately when anyone completes 5 lines
+    if (newUserLines >= 5) {
+      setWinner('user');
+      setGameOver(true);
+      setShowCelebration(true);
+      setShowComputerBoard(true);
+      // Save game result
+      saveGameResult('win', newUserLines, maybeComputerLines);
+      return;
+    }
+    if (maybeComputerLines >= 5) {
+      setWinner('computer');
+      setGameOver(true);
+      setShowComputerBoard(true);
+      // Save game result
+      saveGameResult('loss', newUserLines, maybeComputerLines);
+      return;
+    }
+    
+    // Switch to computer turn
+    setCurrentTurn('computer');
+    
+    // Computer turn after 0.8 seconds
+    setTimeout(() => {
+      if (!gameOver) {
+        computerTurn(newCalledNumbers);
+      }
+    }, 800);
   };
 
-  // Timer effect
+  // Computer turn
+  const computerTurn = useCallback((latestCalled = calledNumbers) => {
+    if (gameOver) return;
+    
+    // pick a number not yet called
+    const availableForComputer = Array.from({ length: 25 }, (_, i) => i + 1)
+      .filter(n => !latestCalled.includes(n));
+    
+    if (availableForComputer.length === 0) return;
+    
+    const randomIndex = Math.floor(Math.random() * availableForComputer.length);
+    const selectedNumber = availableForComputer[randomIndex];
+    
+    // Add number to called numbers
+    const newCalledNumbers = [...latestCalled, selectedNumber];
+    setCalledNumbers(newCalledNumbers);
+    
+    // compute lines using the *new* called numbers
+    const calledSet = new Set(newCalledNumbers);
+
+    // update both players' lines since the call is global
+    const newComputerLines = checkCompletedLines(computerBoard, calledSet);
+    setComputerLines(newComputerLines);
+    const newUserLines = checkCompletedLines(userBoard, calledSet);
+    setUserLines(newUserLines);
+    
+    // stop immediately when anyone completes 5 lines
+    if (newComputerLines >= 5) {
+      setWinner('computer');
+      setGameOver(true);
+      setShowComputerBoard(true);
+      // Save game result
+      saveGameResult('loss', newUserLines, newComputerLines);
+      return;
+    }
+    if (newUserLines >= 5) {
+      setWinner('user');
+      setGameOver(true);
+      setShowCelebration(true);
+      setShowComputerBoard(true);
+      // Save game result
+      saveGameResult('win', newUserLines, newComputerLines);
+      return;
+    }
+    
+    // Switch back to user turn
+    setCurrentTurn('user');
+  }, [calledNumbers, gameOver, userBoard, computerBoard, checkCompletedLines]);
+
+  // Handle game over
+  const handleGameOver = () => {
+    setShowComputerBoard(true);
+    setShowCelebration(false);
+  };
+
+  // Reset game
+  const resetGame = () => {
+    initializeGame();
+  };
+
+  // Initialize game on component mount
   useEffect(() => {
-    let interval = null;
-    if (gameState === 'playing') {
-      interval = setInterval(() => {
-        setGameTimer(prev => prev + 1);
-      }, 1000);
+    if (!user) {
+      navigate('/login');
+      return;
     }
-    return () => clearInterval(interval);
-  }, [gameState]);
+    initializeGame();
+  }, [initializeGame, user, navigate]);
 
-  // Render a Bingo board
-  const renderBoard = (board, isPlayer = true, onClickNumber) => {
-    return (
-      <div className="grid grid-cols-5 gap-1">
-        {board.map((row, rowIndex) => (
-          row.map((number, colIndex) => (
-            <div
-              key={`${rowIndex}-${colIndex}`}
-              className={`aspect-square rounded-lg flex items-center justify-center font-bold text-sm transition-all duration-300 cursor-pointer ${
-                number === 0
-                  ? (isDarkMode 
-                      ? 'bg-green-500 text-white' 
-                      : 'bg-green-500 text-white')
-                  : (isDarkMode 
-                      ? 'bg-gray-700 text-white hover:bg-gray-600' 
-                      : 'bg-gray-200 text-gray-900 hover:bg-gray-300')
-              } ${isPlayer && gameState === 'playing' && !calledNumbers.includes(number) && number !== 0 ? 'hover:ring-2 hover:ring-blue-400' : ''}`}
-              onClick={isPlayer && gameState === 'playing' && !calledNumbers.includes(number) && number !== 0 ? () => onClickNumber(number) : undefined}
-            >
-              {number === 0 ? '' : number}
-            </div>
-          ))
-        ))}
-      </div>
-    );
-  };
+  // Auto-computer turn if it's computer's turn and game is active
+  useEffect(() => {
+    if (currentTurn === 'computer' && gameStarted && !gameOver) {
+      const timer = setTimeout(() => {
+        computerTurn();
+      }, 800);
+      return () => clearTimeout(timer);
+    }
+  }, [currentTurn, gameStarted, gameOver, computerTurn]);
 
   return (
     <>
       <Navbar />
-      <div className={`min-h-screen ${
+      <div className={`min-h-screen py-8 ${
         isDarkMode 
           ? 'bg-gradient-to-br from-gray-900 via-gray-800 to-black' 
-          : 'bg-gradient-to-br from-gray-50 via-blue-50 to-indigo-50'
+          : 'bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50'
       }`}>
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          {/* Game Header */}
-          <div className="mb-8">
-            <h1 className={`text-4xl font-bold mb-4 ${
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          {/* Header */}
+          <div className="text-center mb-8">
+            <h1 className={`text-4xl md:text-5xl font-bold mb-4 ${
               isDarkMode ? 'text-white' : 'text-gray-900'
             }`}>
-              🎯 Bingo Game
+              🎯 BingoV
             </h1>
-            <div className="flex items-center justify-between">
-              <div className={`text-lg ${
-                isDarkMode ? 'text-gray-300' : 'text-gray-600'
+            <div className="flex items-center justify-between max-w-md mx-auto mb-4">
+              <div className={`text-lg font-semibold ${
+                currentTurn === 'user' 
+                  ? (isDarkMode ? 'text-cyan-400' : 'text-blue-600')
+                  : (isDarkMode ? 'text-gray-400' : 'text-gray-500')
               }`}>
-                Player: <span className={`font-semibold ${
-                  isDarkMode ? 'text-cyan-400' : 'text-blue-600'
-                }`}>{user?.username || 'Player'}</span>
+                👤 Your Turn
               </div>
-              <div className={`text-lg ${
-                isDarkMode ? 'text-gray-300' : 'text-gray-600'
+              <div className={`text-lg font-semibold ${
+                currentTurn === 'computer' 
+                  ? (isDarkMode ? 'text-green-400' : 'text-green-600')
+                  : (isDarkMode ? 'text-gray-400' : 'text-gray-500')
               }`}>
-                Time: <span className={`font-semibold ${
-                  isDarkMode ? 'text-yellow-400' : 'text-yellow-600'
-                }`}>{Math.floor(gameTimer / 60)}:{(gameTimer % 60).toString().padStart(2, '0')}</span>
+                🤖 Computer Turn
+              </div>
+            </div>
+            {/* Progress Display */}
+            <div className="flex items-center justify-between max-w-md mx-auto">
+              <div className={`text-sm font-semibold ${
+                isDarkMode ? 'text-cyan-400' : 'text-blue-600'
+              }`}>
+                👤 Your Lines: {userLines}/5
+              </div>
+              <div className={`text-sm font-semibold ${
+                isDarkMode ? 'text-green-400' : 'text-green-600'
+              }`}>
+                🤖 Computer Lines: {computerLines}/5
               </div>
             </div>
           </div>
 
           {/* Game Controls */}
-          {gameState === 'waiting' && (
-            <div className={`rounded-xl p-6 border-2 mb-8 ${
+          <div className="flex justify-center mb-8 space-x-4">
+            <button
+              onClick={() => navigate('/dashboard')}
+              className={`px-6 py-3 rounded-lg font-semibold transition-all duration-300 transform hover:scale-105 ${
+                isDarkMode 
+                  ? 'bg-gradient-to-r from-gray-600 to-gray-700 hover:from-gray-700 hover:to-gray-800 text-white shadow-lg' 
+                  : 'bg-gradient-to-r from-gray-500 to-gray-600 hover:from-gray-600 hover:to-gray-700 text-white shadow-lg'
+              }`}
+            >
+              ← Dashboard
+            </button>
+            <button
+              onClick={resetGame}
+              className={`px-6 py-3 rounded-lg font-semibold transition-all duration-300 transform hover:scale-105 ${
+                isDarkMode 
+                  ? 'bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 text-white shadow-lg shadow-cyan-500/25' 
+                  : 'bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white shadow-lg shadow-blue-500/25'
+              }`}
+            >
+              🔄 New Game
+            </button>
+            {gameOver && (
+              <button
+                onClick={handleGameOver}
+                className={`px-6 py-3 rounded-lg font-semibold transition-all duration-300 transform hover:scale-105 ${
+                  isDarkMode 
+                    ? 'bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white shadow-lg shadow-green-500/25' 
+                    : 'bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white shadow-lg shadow-green-500/25'
+                }`}
+              >
+                 Show Computer Board
+              </button>
+            )}
+          </div>
+
+          {/* User Board Only - Computer board hidden during gameplay */}
+          <div className="flex justify-center mb-8">
+            <div className={`rounded-2xl p-6 border-2 max-w-md ${
               isDarkMode 
                 ? 'bg-gray-800/50 border-gray-600 backdrop-blur-sm' 
                 : 'bg-white/50 border-gray-200 backdrop-blur-sm'
             }`}>
-              <div className="text-center">
-                <h2 className={`text-2xl font-bold mb-4 ${
-                  isDarkMode ? 'text-white' : 'text-gray-900'
-                }`}>
-                  Ready to Play?
-                </h2>
-                <p className={`mb-6 ${
-                  isDarkMode ? 'text-gray-300' : 'text-gray-600'
-                }`}>
-                  You'll be playing against the computer. Get 5 lines (rows, columns, or diagonals) to win!
-                </p>
-                <button
-                  onClick={startGame}
-                  className={`px-8 py-4 rounded-lg text-lg font-bold transform hover:scale-105 transition-all duration-300 ${
-                    isDarkMode 
-                      ? 'bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 text-white shadow-lg shadow-cyan-500/25' 
-                      : 'bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white shadow-lg shadow-blue-500/25'
-                  }`}
-                >
-                  🚀 Start Game
-                </button>
+              <h3 className={`text-2xl font-bold text-center mb-6 ${
+                isDarkMode ? 'text-cyan-400' : 'text-blue-600'
+              }`}>
+                👤 Your Board
+              </h3>
+              <div className="grid grid-cols-5 gap-2">
+                {userBoard.map((row, rowIndex) => 
+                  row.map((number, colIndex) => (
+                    <button
+                      key={`${rowIndex}-${colIndex}`}
+                      onClick={() => handleUserBoardClick(number)}
+                      disabled={calledNumbers.includes(number) || currentTurn !== 'user' || gameOver}
+                      className={`aspect-square rounded-lg flex items-center justify-center font-bold text-lg transition-all duration-300 transform hover:scale-105 disabled:cursor-not-allowed ${
+                        calledNumbers.includes(number)
+                          ? 'bg-red-500 text-white line-through'
+                          : currentTurn === 'user' && !gameOver
+                            ? isDarkMode
+                              ? 'bg-gray-700 text-white hover:bg-gray-600 hover:ring-2 hover:ring-cyan-400'
+                              : 'bg-gray-100 text-gray-900 hover:bg-gray-200 hover:ring-2 hover:ring-blue-400'
+                            : isDarkMode
+                              ? 'bg-gray-700 text-gray-400'
+                              : 'bg-gray-200 text-gray-500'
+                      }`}
+                    >
+                      {number}
+                    </button>
+                  ))
+                )}
               </div>
+            </div>
+          </div>
+
+          {/* Save Success Message */}
+          {showSaveSuccess && (
+            <div className={`mb-6 p-4 rounded-lg text-center ${
+              isDarkMode 
+                ? 'bg-green-600/20 border border-green-500 text-green-400' 
+                : 'bg-green-100 border border-green-500 text-green-700'
+            }`}>
+              ✅ Game result saved successfully! Check your statistics in the dashboard.
             </div>
           )}
 
-          {/* Game Interface */}
-          {gameState === 'playing' && (
-            <div className="space-y-8 flex flex-col items-center">
-              {/* Player Board */}
-              <div className={`rounded-xl p-6 border-2 mx-auto ${
-                isDarkMode 
-                  ? 'bg-gray-800/50 border-gray-600 backdrop-blur-sm' 
-                  : 'bg-white/50 border-gray-200 backdrop-blur-sm'
-              }`}>
-                <h3 className={`text-xl font-bold mb-4 text-center ${
-                  isDarkMode ? 'text-white' : 'text-gray-900'
-                }`}>
-                  Your Board
-                </h3>
-                {playerBoard.length > 0 && renderBoard(playerBoard, true, handlePlayerNumberClick)}
-                {lastComputerNumber && (
-                  <div className="mt-4 text-center">
-                    <span className={`text-base font-semibold ${isDarkMode ? 'text-yellow-400' : 'text-yellow-700'}`}>Computer called: {lastComputerNumber}</span>
-                  </div>
-                )}
-                <div className="mt-4 text-center">
-                  <span className={`text-base font-semibold ${isPlayerTurn ? (isDarkMode ? 'text-cyan-400' : 'text-blue-600') : (isDarkMode ? 'text-pink-400' : 'text-pink-600')}`}>{isPlayerTurn ? "Your turn!" : "Computer's turn..."}</span>
-                </div>
-              </div>
-              {/* Called Numbers */}
-              <div className={`rounded-xl p-6 border-2 ${
-                isDarkMode 
-                  ? 'bg-gray-800/50 border-gray-600 backdrop-blur-sm' 
-                  : 'bg-white/50 border-gray-200 backdrop-blur-sm'
-              }`}>
-                <h3 className={`text-lg font-bold mb-4 ${
-                    isDarkMode ? 'text-white' : 'text-gray-900'
-                  }`}>
-                  Called Numbers ({calledNumbers.length}/25)
-                </h3>
-                <div className="flex flex-wrap gap-2">
-                  {calledNumbers.map((number, index) => (
-                    <div
-                      key={index}
-                      className={`w-8 h-8 rounded-lg flex items-center justify-center text-xs font-bold ${
-                        isDarkMode 
-                          ? 'bg-green-500 text-white' 
-                          : 'bg-green-500 text-white'
-                      }`}
-                    >
-                      {number}
-                  </div>
-                  ))}
-                </div>
-                    </div>
-                  </div>
-                )}
-
-          {/* Game Result */}
-          {(gameState === 'won' || gameState === 'lost' || gameState === 'draw') && (
-            <div className="space-y-8 flex flex-col items-center">
-                {/* Player Board */}
-              <div className={`rounded-xl p-6 border-2 mx-auto ${
-                  isDarkMode 
-                    ? 'bg-gray-800/50 border-gray-600 backdrop-blur-sm' 
-                    : 'bg-white/50 border-gray-200 backdrop-blur-sm'
-                }`}>
-                  <h3 className={`text-xl font-bold mb-4 text-center ${
-                    isDarkMode ? 'text-white' : 'text-gray-900'
-                  }`}>
-                    Your Board
-                  </h3>
-                  {playerBoard.length > 0 && renderBoard(playerBoard, true)}
-                </div>
-              {/* Computer Board - now visible */}
-              <div className={`rounded-xl p-6 border-2 mx-auto ${
-                  isDarkMode 
-                    ? 'bg-gray-800/50 border-gray-600 backdrop-blur-sm' 
-                    : 'bg-white/50 border-gray-200 backdrop-blur-sm'
-                }`}>
-                  <h3 className={`text-xl font-bold mb-4 text-center ${
-                    isDarkMode ? 'text-white' : 'text-gray-900'
-                  }`}>
-                    Computer's Board
-                  </h3>
-                  {computerBoard.length > 0 && renderBoard(computerBoard, false)}
-                </div>
-              {/* Called Numbers */}
-              <div className={`rounded-xl p-6 border-2 ${
-                isDarkMode 
-                  ? 'bg-gray-800/50 border-gray-600 backdrop-blur-sm' 
-                  : 'bg-white/50 border-gray-200 backdrop-blur-sm'
-              }`}>
-                <h3 className={`text-lg font-bold mb-4 ${
-                  isDarkMode ? 'text-white' : 'text-gray-900'
-                }`}>
-                  Called Numbers ({calledNumbers.length}/25)
-                </h3>
-                <div className="flex flex-wrap gap-2">
-                  {calledNumbers.map((number, index) => (
-                    <div
-                      key={index}
-                      className={`w-8 h-8 rounded-lg flex items-center justify-center text-xs font-bold ${
-                        isDarkMode 
-                          ? 'bg-green-500 text-white' 
-                          : 'bg-green-500 text-white'
-                      }`}
-                    >
-                      {number}
-                    </div>
-                  ))}
-                </div>
-              </div>
-              {/* Game Result Message */}
-            <div className={`rounded-xl p-8 border-2 text-center ${
-              isDarkMode 
-                ? 'bg-gray-800/50 border-gray-600 backdrop-blur-sm' 
-                : 'bg-white/50 border-gray-200 backdrop-blur-sm'
+          {/* Called Numbers */}
+          <div className={`rounded-2xl p-6 border-2 ${
+            isDarkMode 
+              ? 'bg-gray-800/50 border-gray-600 backdrop-blur-sm' 
+              : 'bg-white/50 border-gray-200 backdrop-blur-sm'
+          }`}>
+            <h3 className={`text-2xl font-bold text-center mb-6 ${
+              isDarkMode ? 'text-purple-400' : 'text-purple-600'
             }`}>
-              <div className="text-6xl mb-4">
-                {gameState === 'won' ? '🎉' : gameState === 'lost' ? '😔' : '🤝'}
-              </div>
-              <h2 className={`text-3xl font-bold mb-4 ${
-                isDarkMode ? 'text-white' : 'text-gray-900'
+              📢 Called Numbers ({calledNumbers.length})
+            </h3>
+            <div className="flex flex-wrap gap-2 justify-center">
+              {calledNumbers.map((number, index) => (
+                <div
+                  key={index}
+                  className={`px-3 py-2 rounded-lg font-bold text-lg ${
+                    isDarkMode 
+                      ? 'bg-red-500 text-white' 
+                      : 'bg-red-500 text-white'
+                  }`}
+                >
+                  {number}
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Computer Board - Only shown after game over */}
+          {showComputerBoard && (
+            <div className="mt-8 flex justify-center">
+              <div className={`rounded-2xl p-6 border-2 max-w-md ${
+                isDarkMode 
+                  ? 'bg-gray-800/50 border-gray-600 backdrop-blur-sm' 
+                  : 'bg-white/50 border-gray-200 backdrop-blur-sm'
               }`}>
-                {gameState === 'won' ? 'Congratulations! You Won!' : 
-                 gameState === 'lost' ? 'Computer Wins!' : 'It\'s a Draw!'}
-              </h2>
-              <div className="flex justify-center space-x-4">
-                <button
-                  onClick={startGame}
-                  className={`px-6 py-3 rounded-lg font-semibold transition-all duration-300 ${
-                    isDarkMode 
-                      ? 'bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 text-white' 
-                      : 'bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white'
-                  }`}
-                >
-                  🎮 Play Again
-                </button>
-                <button
-                  onClick={() => navigate('/dashboard')}
-                  className={`px-6 py-3 rounded-lg font-semibold transition-all duration-300 ${
-                    isDarkMode 
-                      ? 'border border-gray-600 text-gray-300 hover:bg-gray-700' 
-                      : 'border border-gray-300 text-gray-700 hover:bg-gray-100'
-                  }`}
-                >
-                  🏠 Back to Dashboard
-                </button>
+                <h3 className={`text-2xl font-bold text-center mb-6 ${
+                  isDarkMode ? 'text-green-400' : 'text-green-600'
+                }`}>
+                  🤖 Computer Board
+                </h3>
+                <div className="grid grid-cols-5 gap-2">
+                  {computerBoard.map((row, rowIndex) => 
+                    row.map((number, colIndex) => (
+                      <div
+                        key={`${rowIndex}-${colIndex}`}
+                        className={`aspect-square rounded-lg flex items-center justify-center font-bold text-lg transition-all duration-300 ${
+                          calledNumbers.includes(number)
+                            ? 'bg-red-500 text-white line-through'
+                            : isDarkMode
+                              ? 'bg-gray-700 text-white'
+                              : 'bg-gray-100 text-gray-900'
+                        }`}
+                      >
+                        {number}
+                      </div>
+                    ))
+                  )}
                 </div>
               </div>
             </div>
           )}
         </div>
+
+        {/* Celebration Modal */}
+        {showCelebration && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center">
+            <div className="absolute inset-0 bg-black/50 backdrop-blur-sm"></div>
+            <div className={`relative max-w-md w-full mx-4 p-8 rounded-2xl shadow-2xl transform transition-all duration-300 ${
+              isDarkMode 
+                ? 'bg-gray-800 border border-gray-600' 
+                : 'bg-white border border-gray-200'
+            }`}>
+              <div className="text-center">
+                <div className="text-6xl mb-4">🎉</div>
+                <h3 className={`text-3xl font-bold mb-4 ${
+                  isDarkMode ? 'text-yellow-400' : 'text-yellow-600'
+                }`}>
+                  BINGO! 🎯
+                </h3>
+                <p className={`text-xl mb-6 ${
+                  isDarkMode ? 'text-white' : 'text-gray-900'
+                }`}>
+                  Congratulations! You completed {userLines} lines! 🏆
+                </p>
+                <div className="flex space-x-3">
+                  <button
+                    onClick={handleGameOver}
+                    className={`flex-1 px-6 py-3 rounded-lg font-semibold transition-all duration-300 transform hover:scale-105 ${
+                      isDarkMode 
+                        ? 'bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 text-white shadow-lg shadow-cyan-500/25' 
+                        : 'bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-blue-700 text-white shadow-lg shadow-cyan-500/25'
+                    }`}
+                  >
+                    Show Computer Board
+                  </button>
+                  <button
+                    onClick={resetGame}
+                    className={`flex-1 px-6 py-3 rounded-lg font-semibold transition-all duration-300 transform hover:scale-105 ${
+                      isDarkMode 
+                        ? 'bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white shadow-lg shadow-green-500/25' 
+                        : 'bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white shadow-lg shadow-green-500/25'
+                    }`}
+                  >
+                    🔄 New Game
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Computer Win Modal */}
+        {gameOver && winner === 'computer' && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center">
+            <div className="absolute inset-0 bg-black/50 backdrop-blur-sm"></div>
+            <div className={`relative max-w-md w-full mx-4 p-8 rounded-2xl shadow-2xl transform transition-all duration-300 ${
+              isDarkMode 
+                ? 'bg-gray-800 border border-gray-600' 
+                : 'bg-white border border-gray-200'
+            }`}>
+              <div className="text-center">
+                <div className="text-6xl mb-4">🤖</div>
+                <h3 className={`text-3xl font-bold mb-4 ${
+                  isDarkMode ? 'text-red-400' : 'text-red-600'
+                }`}>
+                  Computer Won! 💻
+                </h3>
+              <p className={`text-xl mb-6 ${
+                  isDarkMode ? 'text-white' : 'text-gray-900'
+                }`}>
+                  Computer completed {computerLines} lines first! Better luck next time.
+                </p>
+                <div className="flex space-x-3">
+                  <button
+                      onClick={handleGameOver}
+                      className={`flex-1 px-6 py-3 rounded-lg font-semibold transition-all duration-300 transform hover:scale-105 ${
+                        isDarkMode 
+                          ? 'bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 text-white shadow-lg shadow-cyan-500/25' 
+                          : 'bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-blue-700 text-white shadow-lg shadow-cyan-500/25'
+                      }`}
+                    >
+                      Show Computer Board
+                    </button>
+                  <button
+                    onClick={resetGame}
+                    className={`flex-1 px-6 py-3 rounded-lg font-semibold transition-all duration-300 transform hover:scale-105 ${
+                      isDarkMode 
+                        ? 'bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white shadow-lg shadow-green-500/25' 
+                        : 'bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white shadow-lg shadow-green-500/25'
+                    }`}
+                  >
+                    🔄 New Game
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </>
   );
 }
 
-export default GamePage; 
+export default GamePage;
