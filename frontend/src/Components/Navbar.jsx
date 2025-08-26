@@ -1,4 +1,6 @@
 import React from 'react';
+import LogoDark from '../assets/BingoV Logo Symbol Only - Light Mode.png';
+import LogoLight from '../assets/BingoV Logo Symbol Only - Dark Mode.png';
 import { Link, useNavigate } from 'react-router-dom';
 import { useTheme } from '../App';
 import { useAuth } from '../App';
@@ -22,13 +24,21 @@ function Navbar() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
           <div className="flex items-center">
-            <div className="flex-shrink-0">
+            <div className="flex-shrink-0 flex items-center gap-2">
+              <Link to="/">
+                <img
+                  src={isDarkMode ? LogoDark : LogoLight}
+                  alt="BingoV Logo"
+                  className="h-10 w-auto"
+                  style={{ marginRight: '0.5rem' }}
+                />
+              </Link>
               <Link to="/" className={`text-2xl font-bold tracking-wider ${
                 isDarkMode 
                   ? 'text-cyan-400' 
                   : 'text-blue-600'
               }`}>
-                <span className="text-red-500">⚡</span> BINGO<span className="text-green-500">V</span>
+                BingoV
               </Link>
             </div>
           </div>

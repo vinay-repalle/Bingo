@@ -6,6 +6,18 @@ import Navbar from '../Components/Navbar';
 import apiService from '../services/api';
 
 function GamePage() {
+  // Rating state for winner modal
+  const [rating, setRating] = useState(0);
+  const [hasRatedOnce, setHasRatedOnce] = useState(() => !!localStorage.getItem('gameRatedOnce'));
+  const [showThankYou, setShowThankYou] = useState(false);
+
+  const handleRate = (star) => {
+    setRating(star);
+    localStorage.setItem('gameRatedOnce', 'true');
+    setShowThankYou(true);
+    setTimeout(() => setShowThankYou(false), 2000); // Thank you message for 2s
+    setHasRatedOnce(true);
+  };
   const { isDarkMode } = useTheme();
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -24,6 +36,8 @@ function GamePage() {
   const [showCelebration, setShowCelebration] = useState(false);
   const [gameStartTime, setGameStartTime] = useState(null);
   const [showSaveSuccess, setShowSaveSuccess] = useState(false);
+  const [showNewGameModal, setShowNewGameModal] = useState(false);
+  const [timer, setTimer] = useState(30);
 
   // --- Helpers to generate different boards ---
   const generateBoard = () => { // helper to create a random 5x5 board
@@ -228,12 +242,16 @@ function GamePage() {
   const handleGameOver = () => {
     setShowComputerBoard(true);
     setShowCelebration(false);
+    if (winner === 'computer') {
+      setWinner(null); // closes the computer win modal
+    }
   };
 
   // Reset game
-  const resetGame = () => {
-    initializeGame();
-  };
+    const resetGame = () => {
+      setShowNewGameModal(false);
+      initializeGame();
+    };
 
   // Initialize game on component mount
   useEffect(() => {
@@ -270,6 +288,81 @@ function GamePage() {
             }`}>
               🎯 BingoV
             </h1>
+            {/* Game Controls */}
+          <div className="flex justify-center mb-8 space-x-4">
+            <button
+              onClick={() => navigate('/dashboard')}
+              className={`px-6 py-3 rounded-lg font-semibold transition-all duration-300 transform hover:scale-105 ${
+                isDarkMode 
+                  ? 'bg-gradient-to-r from-gray-600 to-gray-700 hover:from-gray-700 hover:to-gray-800 text-white shadow-lg' 
+                  : 'bg-gradient-to-r from-gray-500 to-gray-600 hover:from-gray-600 hover:to-gray-700 text-white shadow-lg'
+              }`}
+            >
+              ← Dashboard
+            </button>
+            <button
+              onClick={() => setShowNewGameModal(true)}
+              className={`px-6 py-3 rounded-lg font-semibold transition-all duration-300 transform hover:scale-105 ${
+                isDarkMode 
+                  ? 'bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 text-white shadow-lg shadow-cyan-500/25' 
+                  : 'bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white shadow-lg shadow-blue-500/25'
+              }`}
+            >
+              🔄 New Game
+            </button>
+          {/* New Game Confirmation Modal */}
+          {showNewGameModal && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center">
+              <div className="absolute inset-0 bg-black/50 backdrop-blur-sm"></div>
+              <div className={`relative max-w-sm w-full mx-4 p-8 rounded-2xl shadow-2xl transform transition-all duration-300 ${
+                isDarkMode 
+                  ? 'bg-gray-800 border border-gray-600' 
+                  : 'bg-white border border-gray-200'
+              }`}>
+                <div className="flex flex-col items-center">
+                  <h3 className={`text-2xl font-bold mb-4 ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>Start a new game?</h3>
+                  <p className={`text-md mb-6 ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>Your current game will be lost.</p>
+                  <div className="flex space-x-4">
+                    <button
+                      type="button"
+                      onClick={resetGame}
+                      className={`px-6 py-3 rounded-lg font-semibold transition-all duration-300 transform hover:scale-105 ${
+                        isDarkMode 
+                          ? 'bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white shadow-lg' 
+                          : 'bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white shadow-lg'
+                      }`}
+                    >
+                      Yes, New Game
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setShowNewGameModal(false)}
+                      className={`px-6 py-3 rounded-lg font-semibold transition-all duration-300 transform hover:scale-105 ${
+                        isDarkMode 
+                          ? 'bg-gradient-to-r from-red-500 to-pink-600 hover:from-red-600 hover:to-pink-700 text-white shadow-lg' 
+                          : 'bg-gradient-to-r from-red-500 to-pink-600 hover:from-red-600 hover:to-pink-700 text-white shadow-lg'
+                      }`}
+                    >
+                      <span className="inline-block align-middle mr-2">✖️</span> Cancel
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+            {gameOver && (
+              <button
+                onClick={handleGameOver}
+                className={`px-6 py-3 rounded-lg font-semibold transition-all duration-300 transform hover:scale-105 ${
+                  isDarkMode 
+                    ? 'bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white shadow-lg shadow-green-500/25' 
+                    : 'bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white shadow-lg shadow-green-500/25'
+                }`}
+              >
+                 Show Computer Board
+              </button>
+            )}
+          </div>
             <div className="flex items-center justify-between max-w-md mx-auto mb-4">
               <div className={`text-lg font-semibold ${
                 currentTurn === 'user' 
@@ -293,50 +386,48 @@ function GamePage() {
               }`}>
                 👤 Your Lines: {userLines}/5
               </div>
-              <div className={`text-sm font-semibold ${
-                isDarkMode ? 'text-green-400' : 'text-green-600'
-              }`}>
+              <div
+                className={`text-sm font-semibold ${
+                  isDarkMode ? 'text-cyan-400' : 'text-blue-600'
+                }`}
+                onClick={() => setShowNewGameModal(true)}
+              >
                 🤖 Computer Lines: {computerLines}/5
               </div>
+
             </div>
           </div>
 
-          {/* Game Controls */}
-          <div className="flex justify-center mb-8 space-x-4">
-            <button
-              onClick={() => navigate('/dashboard')}
-              className={`px-6 py-3 rounded-lg font-semibold transition-all duration-300 transform hover:scale-105 ${
-                isDarkMode 
-                  ? 'bg-gradient-to-r from-gray-600 to-gray-700 hover:from-gray-700 hover:to-gray-800 text-white shadow-lg' 
-                  : 'bg-gradient-to-r from-gray-500 to-gray-600 hover:from-gray-600 hover:to-gray-700 text-white shadow-lg'
-              }`}
-            >
-              ← Dashboard
-            </button>
-            <button
-              onClick={resetGame}
-              className={`px-6 py-3 rounded-lg font-semibold transition-all duration-300 transform hover:scale-105 ${
-                isDarkMode 
-                  ? 'bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 text-white shadow-lg shadow-cyan-500/25' 
-                  : 'bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white shadow-lg shadow-blue-500/25'
-              }`}
-            >
-              🔄 New Game
-            </button>
-            {gameOver && (
-              <button
-                onClick={handleGameOver}
-                className={`px-6 py-3 rounded-lg font-semibold transition-all duration-300 transform hover:scale-105 ${
-                  isDarkMode 
-                    ? 'bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white shadow-lg shadow-green-500/25' 
-                    : 'bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white shadow-lg shadow-green-500/25'
-                }`}
-              >
-                 Show Computer Board
-              </button>
-            )}
+          
+          {/* Turn Progress Bars */}
+          <div className="flex items-center justify-center gap-8 mb-6">
+            {/* User Line */}
+            <div className="flex flex-col items-center">
+              <span className="text-2xl">👤</span>
+              <div className="w-40 h-3 rounded-full bg-gray-300 overflow-hidden mt-2">
+                <div
+                  className="h-full rounded-full transition-all duration-300"
+                  style={{
+                    width: currentTurn === 'user' ? `${(timer / 30) * 100}%` : '0%',
+                    background: currentTurn === 'user' ? '#22c55e' : '#d1d5db',
+                  }}
+                ></div>
+              </div>
+            </div>
+            {/* Computer Line */}
+            <div className="flex flex-col items-center">
+              <span className="text-2xl">🤖</span>
+              <div className="w-40 h-3 rounded-full bg-gray-300 overflow-hidden mt-2">
+                <div
+                  className="h-full rounded-full transition-all duration-300"
+                  style={{
+                    width: currentTurn === 'computer' ? `${(timer / 30) * 100}%` : '0%',
+                    background: currentTurn === 'computer' ? '#22c55e' : '#d1d5db',
+                  }}
+                ></div>
+              </div>
+            </div>
           </div>
-
           {/* User Board Only - Computer board hidden during gameplay */}
           <div className="flex justify-center mb-8">
             <div className={`rounded-2xl p-6 border-2 max-w-md ${
@@ -471,6 +562,28 @@ function GamePage() {
                 }`}>
                   Congratulations! You completed {userLines} lines! 🏆
                 </p>
+                {/* Rating UI: Only show for first game, never again after rating once */}
+                {!hasRatedOnce && !showThankYou && (
+                  <div className="mb-6">
+                    <div className="text-lg font-semibold mb-2 text-gray-500">Rate your game experience:</div>
+                    <div className="flex justify-center space-x-2">
+                      {[1,2,3,4,5].map(star => (
+                        <span
+                          key={star}
+                          onClick={() => handleRate(star)}
+                          style={{ cursor: 'pointer', fontSize: '2rem', color: star <= rating ? '#fbbf24' : '#d1d5db' }}
+                          role="button"
+                          aria-label={`Rate ${star} star${star > 1 ? 's' : ''}`}
+                        >
+                          {star <= rating ? '★' : '☆'}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                {!hasRatedOnce && showThankYou && (
+                  <div className="mb-6 text-green-500 text-lg font-semibold">Thank you for your feedback!</div>
+                )}
                 <div className="flex space-x-3">
                   <button
                     onClick={handleGameOver}

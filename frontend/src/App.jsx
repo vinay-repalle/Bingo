@@ -8,8 +8,8 @@ import GamePage from './Pages/GamePage'
 import GoogleCallback from './Components/GoogleCallback'
 import LogoutConfirmation from './Components/LogoutConfirmation'
 import './App.css'
-import React from 'react'
 import apiService from './services/api'
+import MultiplayerGame from './Pages/MultiplayerGame';
 
 // Create theme context
 export const ThemeContext = createContext();
@@ -36,6 +36,7 @@ function App() {
   const [user, setUser] = useState(null);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
+  const [loading, setLoading] = useState(true);
 
   const toggleTheme = () => {
     setIsDarkMode(!isDarkMode);
@@ -72,6 +73,7 @@ function App() {
   // Check for existing user on app load
   useEffect(() => {
     const checkAuth = async () => {
+      setLoading(true);
       const token = localStorage.getItem('token');
       if (token) {
         try {
@@ -84,10 +86,22 @@ function App() {
           localStorage.removeItem('user');
         }
       }
+      setLoading(false);
     };
-
     checkAuth();
   }, []);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-100 via-indigo-100 to-purple-100">
+        <div className="flex flex-col items-center">
+          <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-blue-500 mb-6"></div>
+          <div className="text-2xl font-bold text-indigo-700 mb-2">Bingo Game</div>
+          <div className="text-lg font-medium text-gray-600">Checking authentication...</div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <ThemeContext.Provider value={{ isDarkMode, toggleTheme }}>
@@ -112,9 +126,11 @@ function App() {
               <Route path="/game" element={
                 isAuthenticated ? <GamePage /> : <Navigate to="/login" />
               } />
+              <Route path="/multiplayer" element={
+                isAuthenticated ? <MultiplayerGame /> : <Navigate to="/login" />
+              } />
               <Route path="/auth/google/callback" element={<GoogleCallback />} />
             </Routes>
-            
             {/* Logout Confirmation Modal */}
             <LogoutConfirmation
               isOpen={showLogoutConfirm}

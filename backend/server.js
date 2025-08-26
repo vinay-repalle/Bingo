@@ -8,6 +8,7 @@ import session from 'express-session';
 import cookieParser from 'cookie-parser';
 import passport from 'passport';
 import { Strategy as GoogleStrategy } from 'passport-google-oauth20';
+import http from 'http';
 
 // Import routes
 import authRoutes from './routes/auth.js';
@@ -145,7 +146,13 @@ app.use('*', (req, res) => {
   res.status(404).json({ error: 'Route not found' });
 });
 
-app.listen(PORT, () => {
+// --- Multiplayer Game Server (Socket.IO) ---
+import { initGameServer } from './GameServer.js';
+
+const server = http.createServer(app);
+initGameServer(server); // Pass the HTTP server to Socket.IO
+
+server.listen(PORT, () => {
   console.log(`🚀 Server running on port ${PORT}`);
   console.log(`📱 Frontend URL: ${process.env.FRONTEND_URL || 'http://localhost:5173'}`);
   console.log(`🔗 Health check: http://localhost:${PORT}/api/health`);

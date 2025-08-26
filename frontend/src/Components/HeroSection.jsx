@@ -70,7 +70,14 @@ function HeroSection() {
                     ? 'bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 text-white shadow-cyan-500/25' 
                     : 'bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white shadow-blue-500/25'
                 }`}>
-                  🚀 Start Playing Now
+                  🤖 Play with Computer
+                </Link>
+                <Link to="/multiplayer" className={`px-8 py-4 rounded-lg text-lg font-bold transform hover:scale-105 transition duration-300 shadow-lg ${
+                  isDarkMode 
+                    ? 'bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white shadow-green-500/25' 
+                    : 'bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white shadow-green-500/25'
+                }`}>
+                  🧑‍🤝‍🧑 Play with Friend (Multiplayer)
                 </Link>
                 <Link to="/dashboard" className={`px-8 py-4 rounded-lg text-lg font-semibold transform hover:scale-105 transition duration-300 border-2 ${
                   isDarkMode 
@@ -87,7 +94,14 @@ function HeroSection() {
                     ? 'bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 text-white shadow-cyan-500/25' 
                     : 'bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white shadow-blue-500/25'
                 }`}>
-                  🚀 Start Playing Now
+                  🤖 Play with Computer
+                </Link>
+                <Link to="/multiplayer" className={`px-8 py-4 rounded-lg text-lg font-bold transform hover:scale-105 transition duration-300 shadow-lg ${
+                  isDarkMode 
+                    ? 'bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white shadow-green-500/25' 
+                    : 'bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white shadow-green-500/25'
+                }`}>
+                  🧑‍🤝‍🧑 Play with Friend (Multiplayer)
                 </Link>
                 <Link to="/login" className={`px-8 py-4 rounded-lg text-lg font-semibold transform hover:scale-105 transition duration-300 border-2 ${
                   isDarkMode 

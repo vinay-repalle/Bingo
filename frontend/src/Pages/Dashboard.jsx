@@ -299,6 +299,18 @@ function Dashboard() {
                     <div className="text-xl font-bold mb-2">Start a new BingoV game</div>
                     <div className="text-sm opacity-90">Challenge the computer!</div>
                   </button>
+                  <button
+                    onClick={() => navigate('/multiplayer')}
+                    className={`p-8 rounded-xl text-center transition-all duration-300 transform hover:scale-105 ${
+                      isDarkMode 
+                        ? 'bg-gradient-to-r from-green-400 to-cyan-500 hover:from-green-500 hover:to-cyan-600 text-white shadow-lg shadow-green-500/25' 
+                        : 'bg-gradient-to-r from-green-400 to-cyan-500 hover:from-green-500 hover:to-cyan-600 text-white shadow-lg shadow-green-500/25'
+                    }`}
+                  >
+                    <div className="text-4xl mb-4">🤝</div>
+                    <div className="text-xl font-bold mb-2">Multiplayer Bingo</div>
+                    <div className="text-sm opacity-90">Play with a friend in real time!</div>
+                  </button>
                   <div className={`p-8 rounded-xl text-center ${
                     isDarkMode ? 'bg-gray-700' : 'bg-gray-100'
                   }`}>
@@ -312,16 +324,17 @@ function Dashboard() {
                   </div>
                 </div>
               </div>
-
               {/* Leaderboard */}
-              <div className="mt-8">
+              <div className="container mx-auto px-4 pb-8">
                 <Leaderboard />
-              </div>
+              </div> 
             </div>
           )}
 
           {activeTab === 'statistics' && (
-            <UserStatistics />
+            <div className="max-w-4xl mx-auto">
+              <UserStatistics />
+            </div>
           )}
         </div>
       </div>
@@ -329,4 +342,4 @@ function Dashboard() {
   );
 }
 
-export default Dashboard; 
+export default Dashboard;
