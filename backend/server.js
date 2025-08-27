@@ -125,8 +125,17 @@ app.use('/api/games', gameRoutes);
 app.use('/api/statistics', statisticsRoutes);
 app.use('/api/admin', adminRoutes);
 
-// Health check endpoint
+// Health check endpoints
 app.get('/api/health', (req, res) => {
+  res.json({ 
+    status: 'OK', 
+    message: 'BingoV Backend is running',
+    timestamp: new Date().toISOString()
+  });
+});
+
+// Render health check endpoint
+app.get('/healthz', (req, res) => {
   res.json({ 
     status: 'OK', 
     message: 'BingoV Backend is running',
