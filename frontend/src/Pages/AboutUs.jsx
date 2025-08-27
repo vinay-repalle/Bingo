@@ -2,11 +2,11 @@ import React from 'react';
 import { useTheme } from '../App';
 import Navbar from '../Components/Navbar';
 import Footer from '../Components/Footer';
-import devPhoto from '../assets/developer.png';
+import devPhoto from '../assets/developer.jpg';
 
 function AboutUs() {
   const { isDarkMode } = useTheme();
-  
+
   return (
     <>
       <Navbar />
@@ -33,7 +33,7 @@ function AboutUs() {
                 smooth animations, and exciting multiplayer features.
               </p>
             </div>
-            
+
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
               {/* Feature 1 */}
               <div className={`rounded-xl p-6 border transition-all duration-300 hover:scale-105 ${
@@ -52,7 +52,7 @@ function AboutUs() {
                   Mark your numbers and shout "BINGO!" when you complete a line.
                 </p>
               </div>
-              
+
               {/* Feature 2 */}
               <div className={`rounded-xl p-6 border transition-all duration-300 hover:scale-105 ${
                 isDarkMode 
@@ -70,7 +70,7 @@ function AboutUs() {
                   Create private rooms or join public games with players worldwide.
                 </p>
               </div>
-              
+
               {/* Feature 3 */}
               <div className={`rounded-xl p-6 border transition-all duration-300 hover:scale-105 ${
                 isDarkMode 
@@ -108,7 +108,7 @@ function AboutUs() {
                 }`}>Me</span>
               </h2>
             </div>
-            
+
             <div className="flex flex-col lg:flex-row items-center gap-12">
               <div className="flex-shrink-0">
                 <img
@@ -120,25 +120,58 @@ function AboutUs() {
               <div className="flex-1 text-center lg:text-left">
                 <h3 className="text-3xl font-bold mb-4">Vinay Repalle</h3>
                 <h4 className="text-xl font-semibold mb-6 text-blue-500">Full Stack Developer</h4>
-                <div className="space-y-4">
-                  <p className={`text-lg leading-relaxed ${
-                    isDarkMode ? 'text-gray-300' : 'text-gray-600'
-                  }`}>
-                    Hi! I'm Vinay, the creator of BingoV. I love building fun, interactive web apps that bring people together. 
-                    My passion for coding and games inspired me to create this modern Bingo experience for everyone to enjoy.
-                  </p>
-                  <p className={`text-lg leading-relaxed ${
-                    isDarkMode ? 'text-gray-300' : 'text-gray-600'
-                  }`}>
-                    This project was built using the MERN stack (MongoDB, Express, React, Node.js) and showcases my skills in 
-                    full stack development, real-time features, and UI/UX design.
-                  </p>
-                  <p className={`text-lg leading-relaxed ${
-                    isDarkMode ? 'text-gray-300' : 'text-gray-600'
-                  }`}>
-                    My motivation was to create a game that not only entertains but also connects people. BingoV is designed to be 
-                    accessible, social, and rewarding, with a focus on user experience and modern web technologies.
-                  </p>
+                <div className="space-y-6">
+                  <div>
+                    <p className={`text-lg leading-relaxed ${
+                      isDarkMode ? 'text-gray-300' : 'text-gray-600'
+                    }`}>
+                      Hi, I'm <b>Vinay Repalle</b>, a full stack developer and the creator of <b>BingoV</b>. I love building web apps that are fun, interactive, and bring people together.
+                    </p>
+                    <p className={`text-lg leading-relaxed ${
+                      isDarkMode ? 'text-gray-300' : 'text-gray-600'
+                    }`}>
+                      BingoV started as a passion project. I wanted to take the classic game of Bingo and give it a fresh, digital twist – something modern, smooth, and enjoyable for everyone.
+                    </p>
+                    <p className={`text-lg leading-relaxed ${
+                      isDarkMode ? 'text-gray-300' : 'text-gray-600'
+                    }`}>
+                      I built this project using the MERN stack (MongoDB, Express, React, Node.js). It helped me explore real-time features, clean UI design, and scalable web technologies.
+                    </p>
+                    <p className={`text-lg leading-relaxed ${
+                      isDarkMode ? 'text-gray-300' : 'text-gray-600'
+                    }`}>
+                      <b>My goal is simple – to make games that connect people and create memorable moments. I hope you enjoy playing BingoV as much as I enjoyed building it.</b>
+                    </p>
+                  </div>
+                  <div>
+                      <h5 className="text-2xl font-bold mb-2">How the Idea Started</h5>
+                      <p
+                        className={`text-lg leading-relaxed ${
+                          isDarkMode ? "text-gray-300" : "text-gray-600"
+                        }`}
+                      >
+                        It all began as a simple way to pass time. One of my friend introduced me
+                        to Bingo, and we started playing just for fun. We ended up spending hours
+                        on it, and that small interest quickly grew into something bigger.
+                      </p>
+                      <p
+                        className={`text-lg leading-relaxed ${
+                          isDarkMode ? "text-gray-300" : "text-gray-600"
+                        }`}
+                      >
+                        I first created a console-based version of the game just to relive those
+                        moments. That little experiment planted the seed for what you see today –{" "}
+                        <b>BingoV</b>, a complete online platform for playing and enjoying Bingo
+                        with others. That seed blossomed into something far greater than I imagined,
+                        and I’ll always hold deep gratitude for the friend who watered that seed
+                        with their spark of inspiration.
+                      </p>
+                      <div className="flex justify-end">
+                        <p className="mt-4 text-lg font-medium text-blue-600 italic">
+                          Thank you, my friend!
+                        </p>
+                      </div>
+                    </div>
                 </div>
               </div>
             </div>
@@ -166,7 +199,7 @@ function AboutUs() {
                 Feel free to reach out for collaborations, questions, or just to say hello!
               </p>
             </div>
-            
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
               <div className={`rounded-xl p-6 border transition-all duration-300 hover:scale-105 ${
                 isDarkMode 
@@ -190,7 +223,7 @@ function AboutUs() {
                   Available for freelance work and collaborations
                 </p>
               </div>
-              
+
               <div className={`rounded-xl p-6 border transition-all duration-300 hover:scale-105 ${
                 isDarkMode 
                   ? 'bg-gray-800/50 border-gray-600' 
@@ -216,7 +249,7 @@ function AboutUs() {
             </div>
           </div>
         </section>
-        
+
         <Footer />
       </div>
     </>
