@@ -1,8 +1,19 @@
 import React from 'react';
-import { useTheme } from '../App';
+import { useTheme, useAuth } from '../App';
+import { useNavigate } from 'react-router-dom';
 
 function HowToPlaySection() {
   const { isDarkMode } = useTheme();
+  const { isAuthenticated } = useAuth();
+  const navigate = useNavigate();
+
+  const handleStartGame = () => {
+    if (isAuthenticated) {
+      navigate('/game');
+    } else {
+      navigate('/login');
+    }
+  };
 
   return (
     <section id="how-to-play" className={`py-20 ${
@@ -211,11 +222,14 @@ function HowToPlaySection() {
         
         {/* Call to action */}
         <div className="mt-16 text-center">
-          <button className={`px-8 py-4 rounded-lg text-lg font-bold transform hover:scale-105 transition duration-300 shadow-lg ${
-            isDarkMode 
-              ? 'bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 text-white shadow-cyan-500/25' 
-              : 'bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white shadow-blue-500/25'
-          }`}>
+          <button
+            onClick={handleStartGame}
+            className={`px-8 py-4 rounded-lg text-lg font-bold transform hover:scale-105 transition duration-300 shadow-lg ${
+              isDarkMode 
+                ? 'bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 text-white shadow-cyan-500/25' 
+                : 'bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white shadow-blue-500/25'
+            }`}
+          >
             🎮 Start Your First Game
           </button>
         </div>

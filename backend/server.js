@@ -16,6 +16,7 @@ import userRoutes from './routes/users.js';
 import gameRoutes from './routes/games.js';
 import statisticsRoutes from './routes/statistics.js';
 import Achievement from './models/Achievement.js';
+import adminRoutes from './routes/admin.js';
 
 // Import database connection
 import connectDB from './config/database.js';
@@ -122,6 +123,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/games', gameRoutes);
 app.use('/api/statistics', statisticsRoutes);
+app.use('/api/admin', adminRoutes);
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {

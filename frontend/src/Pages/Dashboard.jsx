@@ -233,6 +233,20 @@ function Dashboard() {
                       <div className={`font-semibold ${
                         isDarkMode ? 'text-white' : 'text-gray-900'
                       }`}>
+                        Coins
+                      </div>
+                      <div className={`text-2xl font-bold flex items-center gap-2 ${
+                        isDarkMode ? 'text-yellow-300' : 'text-yellow-600'
+                      }`}>
+                        <span>🪙</span> {user.coins ?? 0}
+                      </div>
+                    </div>
+                    <div className={`p-4 rounded-lg ${
+                      isDarkMode ? 'bg-gray-700' : 'bg-gray-100'
+                    }`}>
+                      <div className={`font-semibold ${
+                        isDarkMode ? 'text-white' : 'text-gray-900'
+                      }`}>
                         Account Status
                       </div>
                       <div className={`text-sm ${

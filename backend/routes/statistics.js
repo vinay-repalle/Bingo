@@ -39,6 +39,9 @@ router.get('/user', protect, async (req, res) => {
     // Calculate total achievement points
     const totalPoints = achievements.reduce((sum, achievement) => sum + achievement.points, 0);
     
+    // In GET /user, include coins in response
+    const user = await User.findById(userId);
+
     res.json({
       success: true,
       data: {
@@ -47,7 +50,8 @@ router.get('/user', protect, async (req, res) => {
         achievements,
         totalPoints,
         level: Math.floor(totalPoints / 100) + 1,
-        progressToNextLevel: totalPoints % 100
+        progressToNextLevel: totalPoints % 100,
+        coins: user.coins || 0
       }
     });
   } catch (error) {
@@ -227,6 +231,14 @@ router.post('/game', protect, async (req, res) => {
         'stats.totalLosses': result === 'loss' ? 1 : 0
       }
     });
+    
+    // In POST /game, update coins only for computer games
+    // Award coins only for games against computer
+    if ((opponent === 'computer' || !opponent) && result === 'win') {
+      // Example: 10 coins per win, 2 per loss
+      const coinsToAdd = result === 'win' ? 10 : 2;
+      await User.findByIdAndUpdate(userId, { $inc: { coins: coinsToAdd } });
+    }
     
     res.json({
       success: true,

@@ -228,3 +228,9 @@ backend/
 ## License
 
 MIT License - see LICENSE file for details 
+
+## Admin Credentials
+
+- The admin username and password are set via environment variables (`ADMIN_USERNAME`, `ADMIN_PASSWORD`).
+- **Never commit your `.env` file to version control.**
+- Use the provided `env.example` as a template for your own `.env` file. 

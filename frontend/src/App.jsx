@@ -10,6 +10,8 @@ import LogoutConfirmation from './Components/LogoutConfirmation'
 import './App.css'
 import apiService from './services/api'
 import MultiplayerGame from './Pages/MultiplayerGame';
+import AdminStatistics from './Pages/AdminStatistics';
+import AboutUs from './Pages/AboutUs';
 
 // Create theme context
 export const ThemeContext = createContext();
@@ -114,6 +116,7 @@ function App() {
           }`}>
             <Routes>
               <Route path="/" element={<LandingPage />} />
+              <Route path="/about" element={<AboutUs />} />
               <Route path="/login" element={
                 isAuthenticated ? <Navigate to="/dashboard" /> : <LoginPage />
               } />
@@ -130,6 +133,7 @@ function App() {
                 isAuthenticated ? <MultiplayerGame /> : <Navigate to="/login" />
               } />
               <Route path="/auth/google/callback" element={<GoogleCallback />} />
+              <Route path="/admin/statistics" element={<AdminStatistics />} />
             </Routes>
             {/* Logout Confirmation Modal */}
             <LogoutConfirmation

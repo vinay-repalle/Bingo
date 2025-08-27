@@ -95,6 +95,11 @@ const userSchema = new mongoose.Schema({
   lastActive: {
     type: Date,
     default: Date.now
+  },
+  coins: {
+    type: Number,
+    default: 0,
+    min: 0
   }
 }, {
   timestamps: true
@@ -164,6 +169,7 @@ userSchema.methods.getPublicProfile = function() {
     avatar: this.avatar,
     isVerified: this.isVerified,
     stats: this.stats,
+    coins: this.coins,
     preferences: this.preferences,
     createdAt: this.createdAt
   };

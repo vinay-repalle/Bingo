@@ -1,19 +1,21 @@
-# 🎯 Bingo Game
+# 🎯 BingoV - Modern Bingo Game
 
-A modern, full-stack Bingo game built with React, Node.js, and MongoDB. Features authentication, Google OAuth, real-time gameplay, and comprehensive statistics tracking.
+A full-stack, modern Bingo game built with React, Node.js, and MongoDB. Features real-time multiplayer gameplay, comprehensive authentication, admin portal, and a beautiful responsive UI.
 
 ## ✨ Features
 
 ### 🎮 Game Features
 - **Classic Bingo Gameplay**: 5x5 grid with numbers 1-75
-- **Multiple Game Modes**: Classic, Speed, and Challenge modes
-- **Real-time Progress Tracking**: Visual progress indicators
-- **Score System**: Time-based scoring with bonuses
-- **Win Detection**: Automatic row, column, and diagonal win detection
+- **Real-time Multiplayer**: Play with friends online
+- **Single Player Mode**: Practice against computer AI
+- **Coins System**: Earn coins for computer games (wins: 10 coins, losses: 2 coins)
+- **Win Detection**: Automatic row, column, and diagonal detection
+- **Game Statistics**: Track performance and progress
 
 ### 🔐 Authentication & Security
 - **JWT Authentication**: Secure token-based authentication
 - **Google OAuth**: One-click sign-in with Google
+- **Email Verification**: OTP-based email verification
 - **Password Security**: bcrypt hashing with salt rounds
 - **Session Management**: Secure cookie handling
 - **Rate Limiting**: Protection against abuse
@@ -22,13 +24,24 @@ A modern, full-stack Bingo game built with React, Node.js, and MongoDB. Features
 - **User Profiles**: Customizable usernames and avatars
 - **Game Statistics**: Track games played, wins, scores, and times
 - **Leaderboards**: Compare performance with other players
+- **Coins Display**: View earned coins on dashboard
 - **Preferences**: Theme, sound, and notification settings
 
-### 🛡️ Security Features
-- **CORS Protection**: Configurable cross-origin requests
-- **Input Validation**: Comprehensive data sanitization
-- **Helmet Security**: HTTP security headers
-- **Error Handling**: Consistent error responses
+### 🛡️ Admin Portal
+- **Protected Access**: Direct URL access with admin credentials
+- **User Management**: View all users and their details
+- **Game Analytics**: See games played by each user
+- **Statistics Dashboard**: Overall platform statistics
+- **User Deletion**: Remove user accounts and associated data
+- **Leaderboard Management**: View and manage leaderboards
+
+### 🎨 UI/UX Features
+- **Responsive Design**: Works perfectly on all devices
+- **Dark/Light Mode**: Toggle between themes
+- **Modern Navbar**: Desktop overlay with scroll behavior
+- **Mobile Menu**: Professional drawer navigation
+- **Smooth Animations**: Beautiful transitions and effects
+- **Professional Styling**: Modern, clean design
 
 ## 🚀 Quick Start
 
@@ -45,19 +58,8 @@ git clone <repository-url>
 cd BingoGame
 ```
 
-### 2. Quick Setup (Recommended)
+### 2. Backend Setup
 
-```bash
-# Install all dependencies and setup the project
-npm run setup
-
-# Start both frontend and backend servers
-npm run dev
-```
-
-### 3. Manual Setup
-
-#### Backend Setup
 ```bash
 # Navigate to backend directory
 cd backend
@@ -77,7 +79,8 @@ npm run dev
 
 The backend will start on `http://localhost:5000`
 
-#### Frontend Setup
+### 3. Frontend Setup
+
 ```bash
 # Navigate to frontend directory
 cd frontend
@@ -98,32 +101,41 @@ The frontend will start on `http://localhost:5173`
 Create a `.env` file in the `backend/` directory:
 
 ```env
+# Database Configuration
+MONGODB_URI=mongodb://localhost:27017/bingov
+MONGODB_URI_PROD=mongodb+srv://username:password@cluster.mongodb.net/bingov
+
 # Server Configuration
 PORT=5000
 NODE_ENV=development
 
-# MongoDB Configuration
-MONGODB_URI=mongodb://localhost:27017/bingo-game
-# For production: mongodb+srv://username:password@cluster.mongodb.net/bingo-game
+# Frontend URL
+FRONTEND_URL=http://localhost:5173
 
 # JWT Configuration
-JWT_SECRET=your-super-secret-jwt-key-change-this-in-production
+JWT_SECRET=your-super-secret-jwt-key-here
 JWT_EXPIRE=7d
 
 # Google OAuth Configuration
-GOOGLE_CLIENT_ID=your-google-client-id
+GOOGLE_CLIENT_ID=your-google-client-id.apps.googleusercontent.com
 GOOGLE_CLIENT_SECRET=your-google-client-secret
 GOOGLE_CALLBACK_URL=http://localhost:5000/api/auth/google/callback
 
-# Frontend URL (for CORS)
-FRONTEND_URL=http://localhost:5173
-
-# Session Configuration
-SESSION_SECRET=your-session-secret-key-change-this-in-production
+# Email Configuration (Gmail)
+EMAIL_USER=your-email@gmail.com
+EMAIL_APP_PASSWORD=your-gmail-app-password
 
 # Rate Limiting
 RATE_LIMIT_WINDOW_MS=900000
 RATE_LIMIT_MAX_REQUESTS=100
+
+# Security
+CORS_ORIGIN=http://localhost:5173
+SESSION_SECRET=your-session-secret-key
+
+# Admin Credentials
+ADMIN_USERNAME=youradmin
+ADMIN_PASSWORD=yourstrongpassword
 ```
 
 ### Google OAuth Setup
@@ -143,7 +155,14 @@ BingoGame/
 ├── frontend/               # Frontend React app
 │   ├── src/
 │   │   ├── Components/     # Reusable components
+│   │   │   ├── Navbar.jsx  # Responsive navigation
+│   │   │   ├── Footer.jsx  # Simple footer
+│   │   │   └── ...
 │   │   ├── Pages/          # Page components
+│   │   │   ├── Dashboard.jsx
+│   │   │   ├── GamePage.jsx
+│   │   │   ├── AboutUs.jsx
+│   │   │   └── AdminStatistics.jsx
 │   │   ├── services/       # API services
 │   │   └── App.jsx        # Main app component
 │   ├── public/             # Static assets
@@ -154,19 +173,25 @@ BingoGame/
 │   ├── config/
 │   │   └── database.js     # MongoDB connection
 │   ├── middleware/
-│   │   └── auth.js         # Authentication middleware
+│   │   ├── auth.js         # Authentication middleware
+│   │   └── adminAuth.js    # Admin authentication
 │   ├── models/
-│   │   ├── User.js         # User model
-│   │   └── Game.js         # Game model
+│   │   ├── User.js         # User model with coins
+│   │   ├── Game.js         # Game model
+│   │   └── OTP.js          # OTP model
 │   ├── routes/
 │   │   ├── auth.js         # Authentication routes
 │   │   ├── users.js        # User management routes
-│   │   └── games.js        # Game routes
+│   │   ├── games.js        # Game routes
+│   │   ├── admin.js        # Admin routes
+│   │   └── statistics.js   # Statistics routes
+│   ├── services/
+│   │   └── emailService.js # Email functionality
 │   ├── server.js           # Main server file
+│   ├── GameServer.js       # Socket.IO game server
 │   ├── package.json        # Backend dependencies
 │   └── README.md           # Backend documentation
 ├── package.json            # Root project configuration
-├── setup.js               # Setup script
 └── README.md              # This file
 ```
 
@@ -178,6 +203,7 @@ BingoGame/
 - `GET /api/auth/google` - Google OAuth login
 - `GET /api/auth/me` - Get current user
 - `POST /api/auth/logout` - Logout user
+- `POST /api/auth/verify-otp` - Verify email OTP
 
 ### Users
 - `GET /api/users/profile` - Get user profile
@@ -191,34 +217,45 @@ BingoGame/
 - `POST /api/games/:id/move` - Make a move
 - `POST /api/games/:id/end` - End game
 
+### Statistics
+- `POST /api/statistics/game` - Record game statistics
+- `GET /api/statistics/user/:id` - Get user statistics
+
+### Admin (Protected)
+- `GET /api/admin/users` - Get all users
+- `GET /api/admin/user/:id/games` - Get user games
+- `GET /api/admin/stats` - Get platform statistics
+- `GET /api/admin/leaderboard` - Get admin leaderboard
+- `DELETE /api/admin/user/:id` - Delete user
+
 ## 🎮 How to Play
 
 1. **Sign Up/Login**: Create an account or sign in with Google
-2. **Start a Game**: Choose game type and difficulty
+2. **Start a Game**: Choose between single player or multiplayer
 3. **Mark Numbers**: Click on numbers that are called
 4. **Win Conditions**: Complete a row, column, or diagonal
-5. **Track Progress**: View your statistics and leaderboard position
+5. **Earn Coins**: Win coins in single player games
+6. **Track Progress**: View your statistics and leaderboard position
 
 ## 🛠️ Development
 
 ### Running in Development
 
 ```bash
-# Start both frontend and backend simultaneously
+# Terminal 1 - Backend
+cd backend
 npm run dev
 
-# Or run separately:
-# Terminal 1 - Backend
-npm run dev:backend
-
 # Terminal 2 - Frontend
-npm run dev:frontend
+cd frontend
+npm run dev
 ```
 
 ### Building for Production
 
 ```bash
 # Build frontend
+cd frontend
 npm run build
 
 # Start backend in production
@@ -228,19 +265,63 @@ npm start
 
 ## 🚀 Deployment
 
-### Backend Deployment
-
-1. Set `NODE_ENV=production`
-2. Use MongoDB Atlas or production database
-3. Configure proper CORS origins
-4. Set secure session and JWT secrets
-5. Use HTTPS in production
-
 ### Frontend Deployment
 
-1. Build the project: `npm run build`
-2. Deploy the `dist/` folder to your hosting service
-3. Configure environment variables for production
+1. **Build the project**:
+   ```bash
+   cd frontend
+   npm run build
+   ```
+
+2. **Deploy the `dist/` folder** to:
+   - Vercel
+   - Netlify
+   - GitHub Pages
+   - AWS S3
+   - Any static hosting service
+
+### Backend Deployment
+
+1. **Set production environment**:
+   ```bash
+   cd backend
+   cp env.example .env
+   # Edit .env with production values
+   ```
+
+2. **Deploy to**:
+   - Heroku
+   - Railway
+   - DigitalOcean
+   - AWS EC2
+   - Any Node.js hosting service
+
+### Database Setup
+
+- **MongoDB Atlas** (recommended for production)
+- **Configure connection string** in `.env`
+- **Set up proper indexes** for performance
+
+### Production Environment Variables
+
+```env
+NODE_ENV=production
+MONGODB_URI=mongodb+srv://username:password@cluster.mongodb.net/bingov
+JWT_SECRET=your-super-secure-production-secret
+GOOGLE_CLIENT_ID=your-production-google-client-id
+GOOGLE_CLIENT_SECRET=your-production-google-client-secret
+FRONTEND_URL=https://yourdomain.com
+CORS_ORIGIN=https://yourdomain.com
+ADMIN_USERNAME=your-admin-username
+ADMIN_PASSWORD=your-secure-admin-password
+```
+
+## 🎯 Admin Portal Access
+
+- **URL**: `https://yourdomain.com/admin/statistics`
+- **Authentication**: Basic Auth with admin credentials
+- **Features**: User management, statistics, game analytics
+- **Security**: Environment variable-based credentials
 
 ## 🤝 Contributing
 
@@ -262,17 +343,44 @@ If you encounter any issues:
 2. Verify your environment variables are set correctly
 3. Ensure MongoDB is running and accessible
 4. Check that Google OAuth credentials are properly configured
+5. Verify admin credentials are set in environment variables
 
 ## 🎯 Future Features
 
-- [ ] Multiplayer support
-- [ ] Real-time chat
 - [ ] Tournament mode
 - [ ] Custom board themes
-- [ ] Mobile app
 - [ ] Push notifications
 - [ ] Advanced statistics
 - [ ] Social features
+- [ ] Mobile app
+- [ ] Real-time chat
+- [ ] Custom game rules
+
+## 🏆 Tech Stack
+
+### Frontend
+- **React 19** - UI framework
+- **Vite** - Build tool
+- **Tailwind CSS** - Styling
+- **React Router** - Navigation
+- **Socket.IO Client** - Real-time communication
+
+### Backend
+- **Node.js** - Runtime
+- **Express.js** - Web framework
+- **MongoDB** - Database
+- **Mongoose** - ODM
+- **Socket.IO** - Real-time server
+- **JWT** - Authentication
+- **Passport.js** - OAuth
+- **Nodemailer** - Email service
+
+### Security
+- **bcrypt** - Password hashing
+- **Helmet** - Security headers
+- **Rate Limiting** - Abuse protection
+- **CORS** - Cross-origin protection
+- **Input Validation** - Data sanitization
 
 ---
 

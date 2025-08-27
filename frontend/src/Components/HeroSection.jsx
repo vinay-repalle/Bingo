@@ -147,13 +147,13 @@ function HeroSection() {
                 ? 'bg-gray-800/50 border-gray-700 backdrop-blur-sm' 
                 : 'bg-white/50 border-gray-200 backdrop-blur-sm'
             }`}>
-              <div className="text-4xl mb-4">⚡</div>
+              <div className="text-4xl mb-4">🧑‍🤝‍🧑</div>
               <h3 className={`text-xl font-semibold mb-2 ${
                 isDarkMode ? 'text-white' : 'text-gray-900'
-              }`}>Fast & Fun</h3>
+              }`}>Multiplayer</h3>
               <p className={`${
                 isDarkMode ? 'text-gray-300' : 'text-gray-600'
-              }`}>Quick matches with instant results</p>
+              }`}>Play with your friends</p>
             </div>
           </div>
         </div>

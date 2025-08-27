@@ -115,41 +115,41 @@ function AboutSection() {
           </div>
         </div>
         
-        {/* Gaming stats */}
-        <div className="mt-20 grid grid-cols-1 md:grid-cols-4 gap-8">
-          <div className="text-center">
-            <div className={`text-4xl font-bold mb-2 ${
-              isDarkMode ? 'text-cyan-400' : 'text-blue-600'
-            }`}>10K+</div>
-            <div className={`${
-              isDarkMode ? 'text-gray-300' : 'text-gray-600'
-            }`}>Active Players</div>
-          </div>
-          <div className="text-center">
-            <div className={`text-4xl font-bold mb-2 ${
-              isDarkMode ? 'text-green-400' : 'text-green-600'
-            }`}>50K+</div>
-            <div className={`${
-              isDarkMode ? 'text-gray-300' : 'text-gray-600'
-            }`}>Games Played</div>
-          </div>
-          <div className="text-center">
-            <div className={`text-4xl font-bold mb-2 ${
-              isDarkMode ? 'text-purple-400' : 'text-purple-600'
-            }`}>100+</div>
-            <div className={`${
-              isDarkMode ? 'text-gray-300' : 'text-gray-600'
-            }`}>Countries</div>
-          </div>
-          <div className="text-center">
-            <div className={`text-4xl font-bold mb-2 ${
-              isDarkMode ? 'text-yellow-400' : 'text-yellow-600'
-            }`}>4.9★</div>
-            <div className={`${
-              isDarkMode ? 'text-gray-300' : 'text-gray-600'
-            }`}>User Rating</div>
-          </div>
-        </div>
+        {/* Gaming stats
+        // <div className="mt-20 grid grid-cols-1 md:grid-cols-4 gap-8">
+        //   <div className="text-center">
+        //     <div className={`text-4xl font-bold mb-2 ${
+        //       isDarkMode ? 'text-cyan-400' : 'text-blue-600'
+        //     }`}>10K+</div>
+        //     <div className={`${
+        //       isDarkMode ? 'text-gray-300' : 'text-gray-600'
+        //     }`}>Active Players</div>
+        //   </div>
+        //   <div className="text-center">
+        //     <div className={`text-4xl font-bold mb-2 ${
+        //       isDarkMode ? 'text-green-400' : 'text-green-600'
+        //     }`}>50K+</div>
+        //     <div className={`${
+        //       isDarkMode ? 'text-gray-300' : 'text-gray-600'
+        //     }`}>Games Played</div>
+        //   </div>
+        //   <div className="text-center">
+        //     <div className={`text-4xl font-bold mb-2 ${
+        //       isDarkMode ? 'text-purple-400' : 'text-purple-600'
+        //     }`}>100+</div>
+        //     <div className={`${
+        //       isDarkMode ? 'text-gray-300' : 'text-gray-600'
+        //     }`}>Countries</div>
+        //   </div>
+        //   <div className="text-center">
+        //     <div className={`text-4xl font-bold mb-2 ${
+        //       isDarkMode ? 'text-yellow-400' : 'text-yellow-600'
+        //     }`}>4.9★</div>
+        //     <div className={`${
+        //       isDarkMode ? 'text-gray-300' : 'text-gray-600'
+        //     }`}>User Rating</div>
+        //   </div>
+        // </div> */}
       </div>
     </section>
   );
