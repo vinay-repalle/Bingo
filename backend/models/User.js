@@ -1,7 +1,35 @@
+/**
+ * 👤 User Model
+ * 
+ * This module defines the User schema and model for the BingoV application.
+ * It handles user authentication, profile management, game statistics, and preferences.
+ * 
+ * Features:
+ * - Local and Google OAuth authentication
+ * - Email verification with OTP
+ * - Game statistics tracking
+ * - User preferences and settings
+ * - Achievement system integration
+ * 
+ * Database Collection: 'users'
+ */
+
 import mongoose from 'mongoose';
 import bcrypt from 'bcryptjs';
 
+/**
+ * 📋 User Schema Definition
+ * 
+ * Defines the structure and validation rules for user documents in MongoDB.
+ * The schema includes fields for authentication, profile data, statistics, and preferences.
+ */
 const userSchema = new mongoose.Schema({
+  /**
+   * 🏷️ Username Field
+   * 
+   * Unique identifier for the user in the system.
+   * Used for login, display, and game identification.
+   */
   username: {
     type: String,
     required: [true, 'Username is required'],
@@ -10,6 +38,13 @@ const userSchema = new mongoose.Schema({
     minlength: [3, 'Username must be at least 3 characters long'],
     maxlength: [30, 'Username cannot exceed 30 characters']
   },
+
+  /**
+   * 📧 Email Field
+   * 
+   * Primary contact method and login credential.
+   * Must be unique and valid email format.
+   */
   email: {
     type: String,
     required: [true, 'Email is required'],
@@ -17,6 +52,13 @@ const userSchema = new mongoose.Schema({
     lowercase: true,
     match: [/^\w+([.-]?\w+)*@\w+([.-]?\w+)*(\.\w{2,3})+$/, 'Please enter a valid email']
   },
+
+  /**
+   * 🔑 Password Field
+   * 
+   * Encrypted password for local authentication.
+   * Not required for Google OAuth users.
+   */
   password: {
     type: String,
     required: function() {
@@ -24,17 +66,29 @@ const userSchema = new mongoose.Schema({
     },
     minlength: [6, 'Password must be at least 6 characters long']
   },
+
+  /**
+   * 🌐 Google OAuth Fields
+   * 
+   * Store Google account information for OAuth authentication.
+   */
   googleId: {
     type: String,
     unique: true,
-    sparse: true,
-    index: true
+    sparse: true,  // Allow multiple null values
+    index: true    // Create database index for faster queries
   },
   isGoogleUser: {
     type: Boolean,
     default: false,
     index: true
   },
+
+  /**
+   * 🖼️ Profile Fields
+   * 
+   * User avatar and verification status.
+   */
   avatar: {
     type: String,
     default: null
@@ -43,6 +97,12 @@ const userSchema = new mongoose.Schema({
     type: Boolean,
     default: false
   },
+
+  /**
+   * 📱 Email Verification Fields
+   * 
+   * OTP (One-Time Password) system for email verification.
+   */
   emailVerificationOTP: {
     type: String,
     default: null
@@ -51,6 +111,12 @@ const userSchema = new mongoose.Schema({
     type: Date,
     default: null
   },
+
+  /**
+   * 🎮 Game Statistics
+   * 
+   * Track user's gaming performance and achievements.
+   */
   stats: {
     gamesPlayed: {
       type: Number,
@@ -77,6 +143,12 @@ const userSchema = new mongoose.Schema({
       default: 0
     }
   },
+
+  /**
+   * ⚙️ User Preferences
+   * 
+   * Customizable settings for the user interface and experience.
+   */
   preferences: {
     theme: {
       type: String,
@@ -92,6 +164,12 @@ const userSchema = new mongoose.Schema({
       default: true
     }
   },
+
+  /**
+   * 📊 Activity Tracking
+   * 
+   * Monitor user engagement and activity patterns.
+   */
   lastActive: {
     type: Date,
     default: Date.now

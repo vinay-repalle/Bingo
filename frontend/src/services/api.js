@@ -1,4 +1,20 @@
-const API_BASE_URL = '/api';
+// Environment-aware API configuration
+const getApiBaseUrl = () => {
+  // Check for environment variable first
+  if (import.meta.env.VITE_API_BASE_URL) {
+    return import.meta.env.VITE_API_BASE_URL;
+  }
+  
+  // Check if we're in development (localhost)
+  if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+    return '/api'; // Use relative path for development
+  }
+  
+  // Production: use Render backend
+  return 'https://bingov-backend.onrender.com/api';
+};
+
+const API_BASE_URL = getApiBaseUrl();
 
 class ApiService {
   constructor() {
