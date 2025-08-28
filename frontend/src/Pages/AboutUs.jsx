@@ -113,7 +113,7 @@ function AboutUs() {
               <div className="flex-shrink-0">
                 <img
                   src={devPhoto}
-                  alt="Vinay Kumar - Developer"
+                  alt="Vinay - Developer"
                   className="w-48 h-48 rounded-full object-cover border-4 border-blue-500 shadow-2xl"
                 />
               </div>
