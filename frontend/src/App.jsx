@@ -133,7 +133,9 @@ function App() {
                 isAuthenticated ? <MultiplayerGame /> : <Navigate to="/login" />
               } />
               <Route path="/auth/google/callback" element={<GoogleCallback />} />
-              <Route path="/admin/statistics" element={<AdminStatistics />} />
+              <Route path="/admin/statistics" element={
+                isAuthenticated ? <AdminStatistics /> : <Navigate to="/login" />
+              } />
             </Routes>
             {/* Logout Confirmation Modal */}
             <LogoutConfirmation

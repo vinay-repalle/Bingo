@@ -23,8 +23,30 @@ function Dashboard() {
   useEffect(() => {
     if (!user) {
       navigate('/login');
+    } else {
+      // Refresh user data when component mounts
+      refreshUserData();
     }
   }, [user, navigate]);
+
+  // Function to refresh user data from backend
+  const refreshUserData = async () => {
+    try {
+      const response = await apiService.getUserStats();
+      if (response.success && response.data.stats) {
+        // Update user context with fresh data
+        const updatedUser = {
+          ...user,
+          coins: response.data.stats.coins || user.coins,
+          level: response.data.stats.level || user.level,
+          totalPoints: response.data.stats.totalPoints || user.totalPoints
+        };
+        login(updatedUser);
+      }
+    } catch (error) {
+      console.error('Failed to refresh user data:', error);
+    }
+  };
 
   const handleLogout = () => {
     logout();
