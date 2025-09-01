@@ -233,11 +233,21 @@ router.post('/game', protect, async (req, res) => {
     });
     
     // In POST /game, update coins only for computer games
-    // Award coins only for games against computer
-    if ((opponent === 'computer' || !opponent) && result === 'win') {
-      // Example: 10 coins per win, 2 per loss
-      const coinsToAdd = result === 'win' ? 10 : 2;
-      await User.findByIdAndUpdate(userId, { $inc: { coins: coinsToAdd } });
+    // Award coins for all computer games to encourage continued play
+    if (opponent === 'computer' || !opponent) {
+      // Award coins: 10 for win, 3 for loss, 5 for draw
+      let coinsToAdd = 0;
+      if (result === 'win') {
+        coinsToAdd = 10;
+      } else if (result === 'loss') {
+        coinsToAdd = 3;
+      } else if (result === 'draw') {
+        coinsToAdd = 5;
+      }
+      
+      if (coinsToAdd > 0) {
+        await User.findByIdAndUpdate(userId, { $inc: { coins: coinsToAdd } });
+      }
     }
     
     res.json({

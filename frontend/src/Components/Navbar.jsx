@@ -129,7 +129,7 @@ function Navbar() {
               {/* Authentication/User Section */}
               {isAuthenticated ? (
                 <div className="flex items-center space-x-3">
-                  <Link to="/dashboard" className={`px-3 py-2 rounded-lg font-semibold text-sm transition-all duration-300 transform hover:scale-105 ${
+                  <Link to="/dashboard" className={`px-3 py-1 rounded-lg font-semibold text-sm transition-all duration-300 transform hover:scale-105 ${
                     isDarkMode 
                       ? 'bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 text-white shadow-lg shadow-cyan-500/25' 
                       : 'bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white shadow-lg shadow-blue-500/25'
@@ -334,10 +334,8 @@ function Navbar() {
                 >
                   ℹ️ About Us
                 </Link>
-              </div>
-
-              {/* Authentication Section */}
-              <div className="space-y-4">
+                
+                {/* Authentication Section - Integrated with navigation for consistent spacing */}
                 {isAuthenticated ? (
                   <>
                     <Link 

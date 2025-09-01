@@ -18,7 +18,7 @@ import dotenv from 'dotenv';
 dotenv.config();
 
 // Load admin credentials from environment variables
-// You can set these in your .env file or hardcode for demo purposes
+// You MUST set these in your .env file for security
 const ADMIN_USERNAME = process.env.ADMIN_USERNAME;
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD;
 
@@ -34,6 +34,15 @@ const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD;
  * @returns {void}
  */
 export const adminAuth = (req, res, next) => {
+  // Check if admin credentials are configured
+  if (!ADMIN_USERNAME || !ADMIN_PASSWORD) {
+    console.error('❌ Admin authentication not configured. Please set ADMIN_USERNAME and ADMIN_PASSWORD environment variables.');
+    return res.status(500).json({ 
+      error: 'Admin authentication not configured',
+      message: 'Please contact the system administrator to configure admin access.'
+    });
+  }
+
   // Extract the Authorization header from the request
   const authHeader = req.headers.authorization;
   

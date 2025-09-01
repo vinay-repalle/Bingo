@@ -10,6 +10,7 @@ function GamePage() {
   const [rating, setRating] = useState(0);
   const [hasRatedOnce, setHasRatedOnce] = useState(() => !!localStorage.getItem('gameRatedOnce'));
   const [showThankYou, setShowThankYou] = useState(false);
+  const [userCoins, setUserCoins] = useState(0);
 
   const handleRate = (star) => {
     setRating(star);
@@ -95,6 +96,10 @@ function GamePage() {
       await apiService.saveGameResult(gameData);
       console.log('Game result saved successfully');
       setShowSaveSuccess(true);
+      
+      // Refresh user statistics to get updated coins
+      await refreshUserStats();
+      
       // Hide success message after 3 seconds
       setTimeout(() => setShowSaveSuccess(false), 3000);
     } catch (error) {
@@ -260,7 +265,22 @@ function GamePage() {
       return;
     }
     initializeGame();
+    // Initialize user coins
+    refreshUserStats();
   }, [initializeGame, user, navigate]);
+
+  // Refresh user statistics to get updated coins
+  const refreshUserStats = async () => {
+    try {
+      if (!user) return;
+      const response = await apiService.getUserStats();
+      if (response.success && response.data.coins !== undefined) {
+        setUserCoins(response.data.coins);
+      }
+    } catch (error) {
+      console.error('Failed to refresh user stats:', error);
+    }
+  };
 
   // Auto-computer turn if it's computer's turn and game is active
   useEffect(() => {
@@ -288,6 +308,12 @@ function GamePage() {
             }`}>
               🎯 BingoV
             </h1>
+            {/* Coins Display */}
+            <div className={`text-lg font-semibold mb-4 ${
+              isDarkMode ? 'text-yellow-400' : 'text-yellow-600'
+            }`}>
+              🪙 Coins: {userCoins}
+            </div>
             {/* Game Controls */}
           <div className="flex justify-center mb-8 space-x-4">
             <button

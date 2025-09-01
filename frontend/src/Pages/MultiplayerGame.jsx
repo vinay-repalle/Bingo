@@ -6,7 +6,7 @@ import io from 'socket.io-client';
 
 const SOCKET_URL = window.location.hostname === 'localhost'
   ? 'http://localhost:5000'
-  : window.location.origin;
+  : 'https://bingov-backend.onrender.com';
 
 function generateEmptyMarked() {
   return Array.from({ length: 5 }, () => Array(5).fill(false));
