@@ -51,16 +51,16 @@ function App() {
   };
 
   const logout = async () => {
+    // Optimistic client-side logout and redirect
+    setUser(null);
+    setIsAuthenticated(false);
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    setShowLogoutConfirm(false);
     try {
       await apiService.logout();
     } catch (error) {
       console.error('Logout error:', error);
-    } finally {
-      setUser(null);
-      setIsAuthenticated(false);
-      localStorage.removeItem('token');
-      localStorage.removeItem('user');
-      setShowLogoutConfirm(false);
     }
   };
 

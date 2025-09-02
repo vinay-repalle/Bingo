@@ -15,7 +15,12 @@ function UserStatistics() {
   const [totalPages, setTotalPages] = useState(1);
 
   useEffect(() => {
-    loadUserStats();
+    let isMounted = true;
+    const run = async () => {
+      await loadUserStats();
+    };
+    if (isMounted) run();
+    return () => { isMounted = false; };
   }, []);
 
   const loadUserStats = async () => {

@@ -32,13 +32,33 @@ class ApiService {
 
   // Helper method to handle responses
   async handleResponse(response) {
-    const data = await response.json();
-    
-    if (!response.ok) {
-      throw new Error(data.message || 'Something went wrong');
+    const contentType = response.headers.get('content-type') || '';
+    let parsed;
+    try {
+      if (contentType.includes('application/json')) {
+        parsed = await response.json();
+      } else {
+        const text = await response.text();
+        try {
+          parsed = JSON.parse(text);
+        } catch {
+          parsed = { message: text };
+        }
+      }
+    } catch (e) {
+      // Fallback when body can't be read
+      parsed = { message: response.statusText || 'Unexpected response' };
     }
-    
-    return data;
+
+    if (!response.ok) {
+      const message = parsed?.message || response.statusText || `Request failed with status ${response.status}`;
+      const err = new Error(message);
+      err.status = response.status;
+      err.data = parsed;
+      throw err;
+    }
+
+    return parsed;
   }
 
   // Generic request method
@@ -46,6 +66,7 @@ class ApiService {
     const url = `${this.baseURL}${endpoint}`;
     const config = {
       headers: this.getAuthHeaders(),
+      credentials: 'include',
       ...options
     };
 

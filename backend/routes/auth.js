@@ -435,10 +435,12 @@ router.post('/login', async (req, res) => {
 // @desc    Google OAuth login
 // @route   GET /api/auth/google
 // @access  Public
-router.get('/google', passport.authenticate('google', {
-  scope: ['profile', 'email'],
-  prompt: 'select_account' // Force account selection
-}));
+router.get('/google',
+  passport.authenticate('google', {
+    scope: ['profile', 'email'], // REQUIRED for Google OAuth
+    prompt: 'select_account'
+  })
+);
 
 // @desc    Google OAuth callback
 // @route   GET /api/auth/google/callback

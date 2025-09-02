@@ -31,7 +31,7 @@ function Navbar() {
     <>
       {/* Desktop Overlay Navbar (lg and up) */}
       <nav 
-        className={`hidden lg:block fixed top-4 left-1/2 transform -translate-x-1/2 z-50 transition-all duration-500 ${
+        className={`hidden lg:block fixed top-4 left-1/2 transform -translate-x-1/2 z-50 transition-all duration-700 ease-in-out ${
           isDarkMode 
             ? 'bg-gray-900/90 backdrop-blur-md border border-gray-700' 
             : 'bg-white/90 backdrop-blur-md border border-gray-200'
@@ -43,26 +43,26 @@ function Navbar() {
           minWidth: isScrolled && !isHovered ? (isAuthenticated ? '170px' : '200px') : 'auto'
         }}
       >
-        <div className={`px-6 py-3 transition-all duration-500 ${
+        <div className={`px-6 py-3 transition-all duration-700 ease-in-out ${
           isScrolled && !isHovered ? 'px-4' : 'px-6'
         }`}>
-          <div className={`flex justify-between items-center transition-all duration-500 ${
+          <div className={`flex justify-between items-center transition-all duration-700 ease-in-out ${
             isScrolled ? 'h-10 lg:h-12' : 'h-12'
           }`}>
             <div className="flex items-center">
-              <div className={`flex-shrink-0 flex items-center gap-1 transition-all duration-500 ${
+              <div className={`flex-shrink-0 flex items-center gap-1 transition-all duration-700 ease-in-out ${
                 isScrolled && !isHovered ? 'gap-1' : 'gap-1'
               }`}>
                 <Link to="/" className="group">
                   <img
                     src={isDarkMode ? LogoDark : LogoLight}
                     alt="BingoV Logo"
-                    className={`transition-all duration-500 ${
+                    className={`transition-all duration-700 ease-in-out ${
                       isScrolled && !isHovered ? 'h-5 w-auto' : 'h-8 w-auto'
                     }`}
                   />
                 </Link>
-                <Link to="/" className={`font-bold tracking-wider transition-all duration-500 ${
+                <Link to="/" className={`font-bold tracking-wider transition-all duration-700 ease-in-out ${
                   isScrolled && !isHovered 
                     ? 'text-lg' 
                     : 'text-xl'
@@ -98,7 +98,7 @@ function Navbar() {
             )}
 
             {/* Desktop Nav - Full navbar at top, collapsed when scrolled */}
-            <div className={`flex items-center space-x-4 ml-12 transition-all duration-500 ${
+            <div className={`flex items-center space-x-4 ml-12 transition-all duration-700 ease-in-out ${
               isScrolled && !isHovered ? 'opacity-0 pointer-events-none' : 'opacity-100'
             }`}>
               <Link to="/" className={`px-3 py-2 rounded-lg text-sm font-medium transition duration-300 ${

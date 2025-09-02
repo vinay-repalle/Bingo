@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTheme } from '../App';
 import { useAuth } from '../App';
@@ -20,28 +20,42 @@ function Dashboard() {
   const [profileSuccess, setProfileSuccess] = useState('');
   const { login } = useAuth();
 
+  const hasRefreshed = useRef(false);
+
   useEffect(() => {
     if (!user) {
       navigate('/login');
-    } else {
-      // Refresh user data when component mounts
-      refreshUserData();
+      return;
     }
-  }, [user, navigate]);
+    if (!hasRefreshed.current) {
+      refreshUserData();
+      hasRefreshed.current = true;
+    }
+  }, [user?.id, navigate]);
 
   // Function to refresh user data from backend
   const refreshUserData = async () => {
     try {
       const response = await apiService.getUserStats();
       if (response.success && response.data.stats) {
-        // Update user context with fresh data
-        const updatedUser = {
-          ...user,
-          coins: response.data.stats.coins || user.coins,
-          level: response.data.stats.level || user.level,
-          totalPoints: response.data.stats.totalPoints || user.totalPoints
-        };
-        login(updatedUser);
+        // Update user context only if values actually changed
+        const nextCoins = response.data.stats.coins ?? user.coins;
+        const nextLevel = response.data.stats.level ?? user.level;
+        const nextTotalPoints = response.data.stats.totalPoints ?? user.totalPoints;
+
+        if (
+          nextCoins !== user.coins ||
+          nextLevel !== user.level ||
+          nextTotalPoints !== user.totalPoints
+        ) {
+          const updatedUser = {
+            ...user,
+            coins: nextCoins,
+            level: nextLevel,
+            totalPoints: nextTotalPoints
+          };
+          login(updatedUser);
+        }
       }
     } catch (error) {
       console.error('Failed to refresh user data:', error);

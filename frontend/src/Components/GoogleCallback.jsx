@@ -30,8 +30,8 @@ function GoogleCallback() {
           // Update auth context
           login(response.data.user);
           
-          // Navigate to dashboard
-          navigate('/dashboard');
+          // Navigate to dashboard and clean query params
+          navigate('/dashboard', { replace: true });
         } catch (error) {
           console.error('Google callback error:', error);
           navigate('/login?error=google_auth_failed');
@@ -52,8 +52,8 @@ function GoogleCallback() {
             // Update auth context
             login(response.data.user);
             
-            // Navigate to dashboard
-            navigate('/dashboard');
+            // Navigate to dashboard and clean query params
+            navigate('/dashboard', { replace: true });
           } catch (error) {
             console.error('Google callback error:', error);
             navigate('/login?error=google_auth_failed');

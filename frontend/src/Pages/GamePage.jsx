@@ -259,15 +259,19 @@ function GamePage() {
     };
 
   // Initialize game on component mount
+  const initializedRef = useRef(false);
   useEffect(() => {
     if (!user) {
       navigate('/login');
       return;
     }
-    initializeGame();
-    // Initialize user coins
-    refreshUserStats();
-  }, [initializeGame, user, navigate]);
+    if (!initializedRef.current) {
+      initializeGame();
+      // Initialize user coins
+      refreshUserStats();
+      initializedRef.current = true;
+    }
+  }, [initializeGame, user?.id, navigate]);
 
   // Refresh user statistics to get updated coins
   const refreshUserStats = async () => {
