@@ -30,12 +30,13 @@ function Navbar() {
   return (
     <>
       {/* Desktop Overlay Navbar (lg and up) */}
-      <nav 
-        className={`hidden lg:block fixed top-4 left-1/2 transform -translate-x-1/2 z-50 transition-all duration-700 ease-in-out ${
-          isDarkMode 
-            ? 'bg-gray-900/90 backdrop-blur-md border border-gray-700' 
-            : 'bg-white/90 backdrop-blur-md border border-gray-200'
-        } rounded-2xl shadow-2xl`}
+      <nav
+        className={`hidden lg:block fixed top-4 left-1/2 transform -translate-x-1/2 z-50 
+          transition-all duration- 500 ease-in-out rounded-2xl shadow-2xl ${
+            isDarkMode
+              ? 'bg-gray-900/90 backdrop-blur-md border border-gray-700'
+              : 'bg-white/90 backdrop-blur-md border border-gray-200'
+          }`}
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
         style={{
@@ -43,53 +44,47 @@ function Navbar() {
           minWidth: isScrolled && !isHovered ? (isAuthenticated ? '170px' : '200px') : 'auto'
         }}
       >
-        <div className={`px-6 py-3 transition-all duration-700 ease-in-out ${
-          isScrolled && !isHovered ? 'px-4' : 'px-6'
-        }`}>
-          <div className={`flex justify-between items-center transition-all duration-700 ease-in-out ${
-            isScrolled ? 'h-10 lg:h-12' : 'h-12'
-          }`}>
+        <div className="px-6 py-3 transition-all duration- 500 ease-in-out">
+          <div
+            className={`flex justify-between items-center transition-all duration- 500 ease-in-out ${
+              isScrolled ? 'h-10 lg:h-12' : 'h-12'
+            }`}
+          >
             <div className="flex items-center">
-              <div className={`flex-shrink-0 flex items-center gap-1 transition-all duration-700 ease-in-out ${
-                isScrolled && !isHovered ? 'gap-1' : 'gap-1'
-              }`}>
+              <div className="flex-shrink-0 flex items-center gap-2 transition-all duration- 500 ease-in-out">
                 <Link to="/" className="group">
                   <img
                     src={isDarkMode ? LogoDark : LogoLight}
                     alt="BingoV Logo"
-                    className={`transition-all duration-700 ease-in-out ${
+                    className={`transition-all duration- 500 ease-in-out ${
                       isScrolled && !isHovered ? 'h-5 w-auto' : 'h-8 w-auto'
                     }`}
                   />
                 </Link>
-                <Link to="/" className={`font-bold tracking-wider transition-all duration-700 ease-in-out ${
-                  isScrolled && !isHovered 
-                    ? 'text-lg' 
-                    : 'text-xl'
-                } ${
-                  isDarkMode 
-                    ? 'text-cyan-400' 
-                    : 'text-blue-600'
-                }`}>
+                <Link
+                  to="/"
+                  className={`font-bold tracking-wider transition-all duration- 500 ease-in-out ${
+                    isScrolled && !isHovered ? 'text-lg' : 'text-xl'
+                  } ${isDarkMode ? 'text-cyan-400' : 'text-blue-600'}`}
+                >
                   BingoV
                 </Link>
               </div>
             </div>
 
-            {/* Shrunk state content - always visible when scrolled and not hovered */}
+            {/* Shrunk state content */}
             {isScrolled && !isHovered && (
-              <div className="flex items-center space-x-2 transition-all duration-500">
-                {isAuthenticated ? (
-                  // Authenticated users: show nothing extra (just logo + BingoV)
-                  <div></div>
-                ) : (
-                  // Non-authenticated users: show login button with text
+              <div className="flex items-center space-x-2 transition-all duration-700 ease-in-out">
+                {!isAuthenticated && (
                   <div className="flex items-center space-x-2 ml-8">
-                    <Link to="/login" className={`px-2 py-1 rounded-lg text-xs font-medium transition-all duration-300 ${
-                      isDarkMode 
-                        ? 'border border-cyan-400 text-cyan-400 hover:bg-cyan-400 hover:text-gray-900' 
-                        : 'border border-blue-500 text-blue-600 hover:bg-blue-500 hover:text-white'
-                    }`}>
+                    <Link
+                      to="/login"
+                      className={`px-2 py-1 rounded-lg text-xs font-medium transition-all duration-300 ${
+                        isDarkMode
+                          ? 'border border-cyan-400 text-cyan-400 hover:bg-cyan-400 hover:text-gray-900'
+                          : 'border border-blue-500 text-blue-600 hover:bg-blue-500 hover:text-white'
+                      }`}
+                    >
                       Login
                     </Link>
                   </div>
@@ -97,62 +92,84 @@ function Navbar() {
               </div>
             )}
 
-            {/* Desktop Nav - Full navbar at top, collapsed when scrolled */}
-            <div className={`flex items-center space-x-4 ml-12 transition-all duration-700 ease-in-out ${
-              isScrolled && !isHovered ? 'opacity-0 pointer-events-none' : 'opacity-100'
-            }`}>
-              <Link to="/" className={`px-3 py-2 rounded-lg text-sm font-medium transition duration-300 ${
-                isDarkMode 
-                  ? 'text-gray-300 hover:text-cyan-400 hover:bg-gray-800' 
-                  : 'text-gray-700 hover:text-blue-600 hover:bg-gray-100'
-              }`} onClick={handleMobileMenuClose}>
+            {/* Full navbar */}
+            <div
+              className={`flex items-center space-x-4 ml-12 transition-all duration-700 ease-in-out ${
+                isScrolled && !isHovered ? 'opacity-0 pointer-events-none' : 'opacity-100'
+              }`}
+            >
+              <Link
+                to="/"
+                className={`px-3 py-2 rounded-lg text-sm font-medium transition duration-300 ${
+                  isDarkMode
+                    ? 'text-gray-300 hover:text-cyan-400 hover:bg-gray-800'
+                    : 'text-gray-700 hover:text-blue-600 hover:bg-gray-100'
+                }`}
+                onClick={handleMobileMenuClose}
+              >
                 Home
               </Link>
-              <Link to="/about" className={`px-3 py-2 rounded-lg text-sm font-medium transition duration-300 ${
-                isDarkMode 
-                  ? 'text-gray-300 hover:text-cyan-400 hover:bg-gray-800' 
-                  : 'text-gray-700 hover:text-blue-600 hover:bg-gray-100'
-              }`} onClick={handleMobileMenuClose}>
+              <Link
+                to="/about"
+                className={`px-3 py-2 rounded-lg text-sm font-medium transition duration-300 ${
+                  isDarkMode
+                    ? 'text-gray-300 hover:text-cyan-400 hover:bg-gray-800'
+                    : 'text-gray-700 hover:text-blue-600 hover:bg-gray-100'
+                }`}
+                onClick={handleMobileMenuClose}
+              >
                 About Us
               </Link>
               {/* Theme Toggle */}
               <button
                 onClick={toggleTheme}
                 className={`p-2 rounded-lg transition-all duration-300 ${
-                  isDarkMode 
-                    ? 'bg-gray-800 hover:bg-gray-700 text-yellow-400' 
+                  isDarkMode
+                    ? 'bg-gray-800 hover:bg-gray-700 text-yellow-400'
                     : 'bg-gray-100 hover:bg-gray-200 text-gray-700'
                 }`}
               >
                 {isDarkMode ? '☀️' : '🌙'}
               </button>
-              {/* Authentication/User Section */}
+              {/* Authentication */}
               {isAuthenticated ? (
-                <div className="flex items-center space-x-3">
-                  <Link to="/dashboard" className={`px-3 py-1 rounded-lg font-semibold text-sm transition-all duration-300 transform hover:scale-105 ${
-                    isDarkMode 
-                      ? 'bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 text-white shadow-lg shadow-cyan-500/25' 
-                      : 'bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white shadow-lg shadow-blue-500/25'
-                  }`} onClick={handleMobileMenuClose}>
+                <div className="flex items-center space-x-3 transition-all duration-700 ease-in-out">
+                  <Link
+                    to="/dashboard"
+                    className={`px-3 py-1 rounded-lg font-semibold text-sm transition-all duration-300 transform hover:scale-105 ${
+                      isDarkMode
+                        ? 'bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 text-white shadow-lg shadow-cyan-500/25'
+                        : 'bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white shadow-lg shadow-blue-500/25'
+                    }`}
+                    onClick={handleMobileMenuClose}
+                  >
                     🏠 Dashboard
                   </Link>
-                  <div className={`flex items-center space-x-2 px-3 py-2 rounded-lg ${
-                    isDarkMode 
-                      ? 'bg-gray-800 text-cyan-400' 
-                      : 'bg-gray-100 text-blue-600'
-                  }`}>
+                  <div
+                    className={`flex items-center space-x-2 px-3 py-2 rounded-lg transition-all duration-700 ease-in-out ${
+                      isDarkMode
+                        ? 'bg-gray-800 text-cyan-400'
+                        : 'bg-gray-100 text-blue-600'
+                    }`}
+                  >
                     {user?.avatar ? (
-                      <img src={user.avatar} alt="avatar" className="w-6 h-6 rounded-full object-cover border border-gray-300" />
+                      <img
+                        src={user.avatar}
+                        alt="avatar"
+                        className="w-6 h-6 rounded-full object-cover border border-gray-300"
+                      />
                     ) : (
-                      <span className="w-6 h-6 flex items-center justify-center rounded-full bg-gray-300 text-gray-600 text-sm">👤</span>
+                      <span className="w-6 h-6 flex items-center justify-center rounded-full bg-gray-300 text-gray-600 text-sm">
+                        👤
+                      </span>
                     )}
                     <span className="text-sm">{user?.username || 'Player'}</span>
                   </div>
                   <button
                     onClick={handleLogoutClick}
                     className={`px-3 py-2 rounded-lg transition-all duration-300 text-sm ${
-                      isDarkMode 
-                        ? 'text-gray-300 hover:text-red-400 hover:bg-gray-800' 
+                      isDarkMode
+                        ? 'text-gray-300 hover:text-red-400 hover:bg-gray-800'
                         : 'text-gray-700 hover:text-red-600 hover:bg-gray-100'
                     }`}
                   >
@@ -160,19 +177,27 @@ function Navbar() {
                   </button>
                 </div>
               ) : (
-                <div className="flex items-center space-x-3">
-                  <Link to="/login" className={`px-3 py-2 rounded-lg font-semibold text-sm transition-all duration-300 transform hover:scale-105 ${
-                    isDarkMode 
-                      ? 'border border-cyan-400 text-cyan-400 hover:bg-cyan-400 hover:text-gray-900' 
-                      : 'border border-blue-500 text-blue-600 hover:bg-blue-500 hover:text-white'
-                  }`} onClick={handleMobileMenuClose}>
+                <div className="flex items-center space-x-3 transition-all duration-700 ease-in-out">
+                  <Link
+                    to="/login"
+                    className={`px-3 py-2 rounded-lg font-semibold text-sm transition-all duration-300 transform hover:scale-105 ${
+                      isDarkMode
+                        ? 'border border-cyan-400 text-cyan-400 hover:bg-cyan-400 hover:text-gray-900'
+                        : 'border border-blue-500 text-blue-600 hover:bg-blue-500 hover:text-white'
+                    }`}
+                    onClick={handleMobileMenuClose}
+                  >
                     🔑 Login
                   </Link>
-                  <Link to="/signup" className={`px-3 py-2 rounded-lg font-semibold text-sm transition-all duration-300 transform hover:scale-105 ${
-                    isDarkMode 
-                      ? 'bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 text-white shadow-lg shadow-cyan-500/25' 
-                      : 'bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white shadow-lg shadow-blue-500/25'
-                  }`} onClick={handleMobileMenuClose}>
+                  <Link
+                    to="/signup"
+                    className={`px-3 py-2 rounded-lg font-semibold text-sm transition-all duration-300 transform hover:scale-105 ${
+                      isDarkMode
+                        ? 'bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 text-white shadow-lg shadow-cyan-500/25'
+                        : 'bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white shadow-lg shadow-blue-500/25'
+                    }`}
+                    onClick={handleMobileMenuClose}
+                  >
                     📝 Sign Up
                   </Link>
                 </div>
