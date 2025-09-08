@@ -32,7 +32,7 @@ function Navbar() {
       {/* Desktop Overlay Navbar (lg and up) */}
       <nav
         className={`hidden lg:block fixed top-4 left-1/2 transform -translate-x-1/2 z-50 
-          transition-all duration- 500 ease-in-out rounded-2xl shadow-2xl ${
+          transition-all duration-500 ease-in-out rounded-2xl shadow-2xl ${
             isDarkMode
               ? 'bg-gray-900/90 backdrop-blur-md border border-gray-700'
               : 'bg-white/90 backdrop-blur-md border border-gray-200'
@@ -44,26 +44,26 @@ function Navbar() {
           minWidth: isScrolled && !isHovered ? (isAuthenticated ? '170px' : '200px') : 'auto'
         }}
       >
-        <div className="px-6 py-3 transition-all duration- 500 ease-in-out">
+        <div className="px-6 py-3 transition-all duration-500 ease-in-out">
           <div
-            className={`flex justify-between items-center transition-all duration- 500 ease-in-out ${
+            className={`flex justify-between items-center transition-all duration-500 ease-in-out ${
               isScrolled ? 'h-10 lg:h-12' : 'h-12'
             }`}
           >
             <div className="flex items-center">
-              <div className="flex-shrink-0 flex items-center gap-2 transition-all duration- 500 ease-in-out">
+              <div className="flex-shrink-0 flex items-center gap-2 transition-all duration-500 ease-in-out">
                 <Link to="/" className="group">
                   <img
                     src={isDarkMode ? LogoDark : LogoLight}
                     alt="BingoV Logo"
-                    className={`transition-all duration- 500 ease-in-out ${
+                    className={`transition-all duration-500 ease-in-out ${
                       isScrolled && !isHovered ? 'h-5 w-auto' : 'h-8 w-auto'
                     }`}
                   />
                 </Link>
                 <Link
                   to="/"
-                  className={`font-bold tracking-wider transition-all duration- 500 ease-in-out ${
+                  className={`font-bold tracking-wider transition-all duration-500 ease-in-out ${
                     isScrolled && !isHovered ? 'text-lg' : 'text-xl'
                   } ${isDarkMode ? 'text-cyan-400' : 'text-blue-600'}`}
                 >
@@ -74,7 +74,7 @@ function Navbar() {
 
             {/* Shrunk state content */}
             {isScrolled && !isHovered && (
-              <div className="flex items-center space-x-2 transition-all duration-700 ease-in-out">
+              <div className="flex items-center space-x-2 transition-all duration-500 ease-in-out">
                 {!isAuthenticated && (
                   <div className="flex items-center space-x-2 ml-8">
                     <Link
@@ -94,7 +94,7 @@ function Navbar() {
 
             {/* Full navbar */}
             <div
-              className={`flex items-center space-x-4 ml-12 transition-all duration-700 ease-in-out ${
+              className={`flex items-center space-x-4 ml-12 transition-all duration-500 ease-in-out ${
                 isScrolled && !isHovered ? 'opacity-0 pointer-events-none' : 'opacity-100'
               }`}
             >
@@ -133,7 +133,7 @@ function Navbar() {
               </button>
               {/* Authentication */}
               {isAuthenticated ? (
-                <div className="flex items-center space-x-3 transition-all duration-700 ease-in-out">
+                <div className="flex items-center space-x-3 transition-all duration-500 ease-in-out">
                   <Link
                     to="/dashboard"
                     className={`px-3 py-1 rounded-lg font-semibold text-sm transition-all duration-300 transform hover:scale-105 ${
@@ -146,7 +146,7 @@ function Navbar() {
                     🏠 Dashboard
                   </Link>
                   <div
-                    className={`flex items-center space-x-2 px-3 py-2 rounded-lg transition-all duration-700 ease-in-out ${
+                    className={`flex items-center space-x-2 px-3 py-2 rounded-lg transition-all duration-500 ease-in-out ${
                       isDarkMode
                         ? 'bg-gray-800 text-cyan-400'
                         : 'bg-gray-100 text-blue-600'
@@ -177,7 +177,7 @@ function Navbar() {
                   </button>
                 </div>
               ) : (
-                <div className="flex items-center space-x-3 transition-all duration-700 ease-in-out">
+                <div className="flex items-center space-x-3 transition-all duration-500 ease-in-out">
                   <Link
                     to="/login"
                     className={`px-3 py-2 rounded-lg font-semibold text-sm transition-all duration-300 transform hover:scale-105 ${

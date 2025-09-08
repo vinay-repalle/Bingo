@@ -447,9 +447,8 @@ router.get('/google',
 // @access  Public
 router.get('/google/callback', 
   passport.authenticate('google', { 
-    failureRedirect: process.env.FRONTEND_URL 
-      ? `${process.env.FRONTEND_URL}/login?error=google_auth_failed`
-      : 'http://localhost:5173/login?error=google_auth_failed',
+    failureRedirect: (process.env.FRONTEND_URL || 'https://bingov.vercel.app')
+      + '/login?error=google_auth_failed',
     session: false 
   }),
   async (req, res) => {
@@ -459,24 +458,22 @@ router.get('/google/callback',
       const twoMinutesAgo = new Date(Date.now() - 2 * 60 * 1000);
       if (req.user.isGoogleUser && req.user.createdAt > twoMinutesAgo) {
         console.log('Sending welcome email to new Google user:', req.user.email);
-        try {
-          await emailService.sendGoogleWelcomeEmail(req.user.email, req.user.username);
-          console.log('Google welcome email sent successfully');
-        } catch (emailError) {
-          console.error('Failed to send Google welcome email:', emailError);
-          // Don't fail the auth process if email fails
-        }
+        // Fire-and-forget to avoid delaying the redirect
+        Promise.resolve()
+          .then(() => emailService.sendGoogleWelcomeEmail(req.user.email, req.user.username))
+          .then(() => console.log('Google welcome email task queued'))
+          .catch((emailError) => console.error('Failed to send Google welcome email:', emailError));
       }
 
       const token = generateToken(req.user._id);
       setTokenCookie(res, token);
       
       // Redirect to frontend callback route with token
-      const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
+      const frontendUrl = process.env.FRONTEND_URL || 'https://bingov.vercel.app';
       res.redirect(`${frontendUrl}/auth/google/callback?token=${token}`);
     } catch (error) {
       console.error('Google callback error:', error);
-      const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
+      const frontendUrl = process.env.FRONTEND_URL || 'https://bingov.vercel.app';
       res.redirect(`${frontendUrl}/login?error=google_auth_failed`);
     }
   }

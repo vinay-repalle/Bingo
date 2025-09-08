@@ -1,8 +1,9 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTheme } from '../App';
 import { useAuth } from '../App';
 import Navbar from '../Components/Navbar';
+import ConstellationBackground from '../Components/ConstellationBackground';
 import apiService from '../services/api';
 
 function GamePage() {
@@ -298,12 +299,13 @@ function GamePage() {
 
   return (
     <>
-      <Navbar />
-      <div className={`min-h-screen py-8 ${
+      
+      <div className={`relative min-h-screen py-8 ${
         isDarkMode 
           ? 'bg-gradient-to-br from-gray-900 via-gray-800 to-black' 
           : 'bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50'
       }`}>
+        <ConstellationBackground dark={isDarkMode} />
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           {/* Header */}
           <div className="text-center mb-8">
