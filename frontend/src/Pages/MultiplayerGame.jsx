@@ -292,8 +292,8 @@ useEffect(() => {
                 + Create Game
               </button>
               <div className="flex items-center space-x-2">
-                <input type="text" value={inputCode} onChange={e => setInputCode(e.target.value)} placeholder="Enter game code" className="px-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-400" />
-                <button onClick={handleJoinGame} className="px-6 py-2 rounded-lg font-semibold bg-gradient-to-r from-green-500 to-emerald-600 text-white shadow hover:scale-105 transition-all">
+                <input type="text" value={inputCode} onChange={e => setInputCode(e.target.value)} placeholder="Enter game code" className="px-4 py-2 rounded-lg border border-gray-300 text-black focus:outline-none focus:ring-2 focus:ring-blue-400" />
+                <button onClick={handleJoinGame} className="px-6 py-2 rounded-lg font-semibold bg-gradient-to-r from-green-500 to-emerald-600 text-black shadow hover:scale-105 transition-all">
                   Join Game
                 </button>
               </div>
