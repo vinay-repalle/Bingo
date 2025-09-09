@@ -5,7 +5,7 @@ A full-stack, modern Bingo game built with React, Node.js, and MongoDB. Features
 ## ✨ Features
 
 ### 🎮 Game Features
-- **Classic Bingo Gameplay**: 5x5 grid with numbers 1-75
+- **Classic Bingo Gameplay**: 5x5 grid with numbers 1-25
 - **Real-time Multiplayer**: Play with friends online
 - **Single Player Mode**: Practice against computer AI
 - **Coins System**: Earn coins for computer games (wins: 10 coins, losses: 2 coins)
