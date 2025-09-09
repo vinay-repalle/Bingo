@@ -11,6 +11,7 @@ function AdminStatistics() {
   const [userGames, setUserGames] = useState([]);
   const [leaderboard, setLeaderboard] = useState([]);
   const [stats, setStats] = useState(null);
+  const [reviews, setReviews] = useState([]);
   const [loading, setLoading] = useState(false);
 
   // Helper to get Basic Auth header
@@ -60,6 +61,12 @@ function AdminStatistics() {
       });
       const statsData = await statsRes.json();
       setStats(statsData.stats || null);
+      // Reviews
+      const reviewsRes = await fetch(`${API_BASE}/reviews`, {
+        headers: { Authorization: getAuthHeader() },
+      });
+      const reviewsData = await reviewsRes.json();
+      setReviews(reviewsData.reviews || []);
     } catch (err) {
       setError('Failed to fetch admin data');
     } finally {
@@ -225,6 +232,32 @@ function AdminStatistics() {
             </table>
           </div>
         )}
+        {/* Reviews */}
+        <div className="bg-white rounded shadow p-4 mb-8 overflow-x-auto">
+          <h2 className="text-xl font-bold mb-4">User Reviews & Ratings</h2>
+          <table className="min-w-full text-sm">
+            <thead>
+              <tr className="bg-gray-100">
+                <th className="py-2 px-3">User</th>
+                <th className="py-2 px-3">Email</th>
+                <th className="py-2 px-3">Rating</th>
+                <th className="py-2 px-3">Comment</th>
+                <th className="py-2 px-3">Date</th>
+              </tr>
+            </thead>
+            <tbody>
+              {reviews.map(r => (
+                <tr key={r._id} className="border-b">
+                  <td className="py-2 px-3">{r.user?.username || '-'}</td>
+                  <td className="py-2 px-3">{r.user?.email || '-'}</td>
+                  <td className="py-2 px-3">{r.rating} / 5</td>
+                  <td className="py-2 px-3">{r.comment || '-'}</td>
+                  <td className="py-2 px-3">{new Date(r.createdAt).toLocaleString()}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
         {/* Leaderboard */}
         <div className="bg-white rounded shadow p-4 mb-8">
           <h2 className="text-xl font-bold mb-4">Leaderboard (Top 20)</h2>

@@ -312,6 +312,24 @@ useEffect(() => {
             </div>
           )}
 
+          {/* Timer and Lines (Called Numbers moved below boards) */}
+          {step === 'playing' && (
+            <div className="flex flex-col items-center mt-8">
+              <div className="text-lg font-semibold mb-2">
+                {isYourTurn ? <span className="text-cyan-500">Your Turn</span> : <span className="text-green-600">Opponent's Turn</span>}
+              </div>
+              <div className="text-2xl font-bold mb-2">⏰ {timer}s</div>
+              <div className="flex justify-between w-full max-w-md mb-4">
+                <div className="text-lg font-semibold text-cyan-500">
+                  Your Lines: {yourLines}/5
+                </div>
+                <div className="text-lg font-semibold text-green-600">
+                  Opponent Lines: {opponentLines}/5
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* Playing */}
           {step === 'playing' && (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mt-8">
@@ -372,21 +390,9 @@ useEffect(() => {
             </div>
           )}
 
-          {/* Timer, Lines and Called Numbers */}
+          {/* Called Numbers moved below the two boards */}
           {step === 'playing' && (
             <div className="flex flex-col items-center mt-8">
-              <div className="text-lg font-semibold mb-2">
-                {isYourTurn ? <span className="text-cyan-500">Your Turn</span> : <span className="text-green-600">Opponent's Turn</span>}
-              </div>
-              <div className="text-2xl font-bold mb-2">⏰ {timer}s</div>
-              <div className="flex justify-between w-full max-w-md mb-4">
-                <div className="text-lg font-semibold text-cyan-500">
-                  Your Lines: {yourLines}/5
-                </div>
-                <div className="text-lg font-semibold text-green-600">
-                  Opponent Lines: {opponentLines}/5
-                </div>
-              </div>
               <div className="mt-4 p-4 bg-white/90 rounded-lg shadow-md">
                 <div className="text-lg font-semibold mb-2 text-blue-600">Called Numbers:</div>
                 <div className="flex flex-wrap gap-2 max-w-md justify-center">
@@ -399,6 +405,8 @@ useEffect(() => {
               </div>
             </div>
           )}
+
+          
 
           {/* Game Ended */}
           {step === 'ended' && (

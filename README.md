@@ -43,6 +43,12 @@ A full-stack, modern Bingo game built with React, Node.js, and MongoDB. Features
 - **Smooth Animations**: Beautiful transitions and effects
 - **Professional Styling**: Modern, clean design
 
+### ⭐ Reviews & Ratings
+- **Public Average Rating** on Landing page (visible to everyone)
+- **Authenticated Reviews**: Logged-in users can submit/update rating and optional comment
+- **Admin Reviews Panel**: Admin can see who rated how much with comments
+- **Theme-aware**: Rating widgets respect dark mode and persist user theme
+
 ## 🚀 Quick Start
 
 ### Prerequisites
@@ -93,6 +99,9 @@ npm run dev
 ```
 
 The frontend will start on `http://localhost:5173`
+
+#### Persisted Theme Preference
+- Your theme choice is saved in `localStorage` and persists across refreshes.
 
 ## ⚙️ Configuration
 
@@ -301,6 +310,7 @@ npm start
 - **MongoDB Atlas** (recommended for production)
 - **Configure connection string** in `.env`
 - **Set up proper indexes** for performance
+- Note: `Review` model enforces a unique index on `user` so each user has at most one review.
 
 ### Production Environment Variables
 
@@ -321,6 +331,7 @@ ADMIN_PASSWORD=your-secure-admin-password
 - **URL**: `https://yourdomain.com/admin/statistics`
 - **Authentication**: Basic Auth with admin credentials
 - **Features**: User management, statistics, game analytics
+  - Includes reviews list endpoint: `/api/admin/reviews`
 - **Security**: Environment variable-based credentials
 
 ## 🤝 Contributing

@@ -27,7 +27,7 @@
 ### **Database**
 - **Primary**: MongoDB Atlas (cloud)
 - **ODM**: Mongoose 8.0.3
-- **Collections**: Users, Games, Achievements, OTPs
+- **Collections**: Users, Games, Achievements, OTPs, Reviews
 
 ---
 
@@ -103,17 +103,20 @@
 frontend/
 ├── src/
 │   ├── Components/          # Reusable UI components
-│   │   ├── Navbar.jsx      # Responsive navigation
-│   │   ├── Footer.jsx      # Site footer
-│   │   ├── GameBoard.jsx   # Bingo game interface
-│   │   ├── Leaderboard.jsx # Player rankings
-│   │   └── UserStats.jsx   # User statistics
+│   │   ├── Navbar.jsx       # Responsive navigation
+│   │   ├── Footer.jsx       # Site footer
+│   │   ├── RatingDisplay.jsx# Average rating badge (public)
+│   │   ├── ReviewForm.jsx   # Auth-only review submission
+│   │   ├── GameBoard.jsx    # Bingo game interface
+│   │   ├── Leaderboard.jsx  # Player rankings
+│   │   └── UserStats.jsx    # User statistics
 │   ├── Pages/              # Route components
-│   │   ├── LandingPage.jsx # Home page
-│   │   ├── Dashboard.jsx   # User dashboard
-│   │   ├── GamePage.jsx    # Game interface
-│   │   ├── LoginPage.jsx   # Authentication
-│   │   └── AdminStats.jsx  # Admin portal
+│   │   ├── LandingPage.jsx  # Home page
+│   │   ├── Dashboard.jsx    # User dashboard
+│   │   ├── GamePage.jsx     # Game interface
+│   │   ├── LoginPage.jsx    # Authentication
+│   │   ├── AboutUs.jsx      # About page (compact rating link)
+│   │   └── AdminStats.jsx   # Admin portal
 │   ├── services/           # API integration
 │   │   └── api.js         # HTTP client service
 │   ├── App.jsx            # Main application
@@ -135,13 +138,15 @@ backend/
 │   ├── User.js           # User data model
 │   ├── Game.js           # Game state model
 │   ├── Achievement.js    # Achievement system
-│   └── OTP.js            # Email verification
+│   ├── OTP.js            # Email verification
+│   └── Review.js         # User review (unique per user)
 ├── routes/
 │   ├── auth.js           # Authentication endpoints
 │   ├── users.js          # User management
 │   ├── games.js          # Game logic
 │   ├── statistics.js     # Analytics
-│   └── admin.js          # Admin functions
+│   ├── reviews.js        # Reviews (submit, average)
+│   └── admin.js          # Admin functions (incl. /admin/reviews)
 ├── services/
 │   └── emailService.js   # Email functionality
 ├── server.js             # Main server

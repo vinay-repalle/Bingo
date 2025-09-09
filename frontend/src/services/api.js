@@ -314,6 +314,18 @@ class ApiService {
     }
     return false;
   }
+
+  // Reviews & Ratings
+  async getAverageRating() {
+    return this.request('/reviews/average');
+  }
+
+  async submitReview({ rating, comment }) {
+    return this.request('/reviews', {
+      method: 'POST',
+      body: JSON.stringify({ rating, comment })
+    });
+  }
 }
 
 // Create singleton instance

@@ -12,6 +12,7 @@ function GamePage() {
   const [hasRatedOnce, setHasRatedOnce] = useState(() => !!localStorage.getItem('gameRatedOnce'));
   const [showThankYou, setShowThankYou] = useState(false);
   const [userCoins, setUserCoins] = useState(0);
+  const computerDelay = 1500; // 2 seconds
 
   const handleRate = (star) => {
     setRating(star);
@@ -192,7 +193,7 @@ function GamePage() {
       if (!gameOver) {
         computerTurn(newCalledNumbers);
       }
-    }, 800);
+    }, computerDelay);
   };
 
   // Computer turn
@@ -292,7 +293,7 @@ function GamePage() {
     if (currentTurn === 'computer' && gameStarted && !gameOver) {
       const timer = setTimeout(() => {
         computerTurn();
-      }, 800);
+      }, computerDelay);
       return () => clearTimeout(timer);
     }
   }, [currentTurn, gameStarted, gameOver, computerTurn]);

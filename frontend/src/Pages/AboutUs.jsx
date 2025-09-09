@@ -3,9 +3,13 @@ import { useTheme } from '../App';
 import Navbar from '../Components/Navbar';
 import Footer from '../Components/Footer';
 import devPhoto from '../assets/developer.jpg';
+import RatingDisplay from '../Components/RatingDisplay';
+import { useAuth } from '../App';
+import { Link } from 'react-router-dom';
 
 function AboutUs() {
   const { isDarkMode } = useTheme();
+  const { isAuthenticated } = useAuth();
 
   return (
     <>
@@ -32,6 +36,24 @@ function AboutUs() {
                 Experience the classic game of Bingo reimagined for the digital age with stunning graphics, 
                 smooth animations, and exciting multiplayer features.
               </p>
+              {/* Compact community rating display */}
+              <div className="mt-6 flex items-center justify-center px-4">
+                <div className={`w-full sm:w-auto inline-flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4 px-4 py-3 rounded-xl shadow ${
+                  isDarkMode ? 'bg-gray-800/60 border border-gray-700' : 'bg-white/70 border border-indigo-100'
+                }`}>
+                  <span className={`text-sm font-semibold text-center sm:text-left ${isDarkMode ? 'text-indigo-300' : 'text-indigo-700'}`}>Community Rating</span>
+                  <div className="flex justify-center">
+                    <RatingDisplay />
+                  </div>
+                  {isAuthenticated && (
+                    <div className="flex justify-center sm:justify-start">
+                      <Link to="/" state={{ scrollTo: 'reviews' }} className={`text-sm font-semibold  ${isDarkMode ? 'text-cyan-300' : 'text-blue-600'}`}>
+                        Leave a review
+                      </Link>
+                    </div>
+                  )}
+                </div>
+              </div>
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">

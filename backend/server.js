@@ -29,6 +29,7 @@ import authRoutes from './routes/auth.js';        // Authentication routes (logi
 import userRoutes from './routes/users.js';       // User management routes (profile, preferences)
 import gameRoutes from './routes/games.js';       // Game logic routes (start, play, end game)
 import statisticsRoutes from './routes/statistics.js'; // Statistics and leaderboard routes
+import reviewsRoutes from './routes/reviews.js';      // Reviews and ratings routes
 import Achievement from './models/Achievement.js'; // Achievement model for initialization
 import adminRoutes from './routes/admin.js';      // Admin-only routes (statistics, management)
 
@@ -220,6 +221,7 @@ app.use('/api/auth', authRoutes);        // Authentication endpoints (/api/auth/
 app.use('/api/users', userRoutes);       // User management endpoints (/api/users/*)
 app.use('/api/games', gameRoutes);       // Game logic endpoints (/api/games/*)
 app.use('/api/statistics', statisticsRoutes); // Statistics endpoints (/api/statistics/*)
+app.use('/api/reviews', reviewsRoutes);       // Reviews endpoints (/api/reviews/*)
 app.use('/api/admin', adminRoutes);      // Admin-only endpoints (/api/admin/*)
 
 /**

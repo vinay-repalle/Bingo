@@ -2,6 +2,7 @@ import express from 'express';
 import { adminAuth } from '../middleware/adminAuth.js';
 import User from '../models/User.js';
 import Game from '../models/Game.js';
+import Review from '../models/Review.js';
 
 const router = express.Router();
 
@@ -97,6 +98,16 @@ router.get('/stats', async (req, res) => {
     });
   } catch (error) {
     res.status(500).json({ error: 'Failed to fetch stats', message: error.message });
+  }
+});
+
+// GET /api/admin/reviews - List all reviews with user info
+router.get('/reviews', async (req, res) => {
+  try {
+    const reviews = await Review.find({}).populate('user', 'username email avatar').sort({ createdAt: -1 });
+    res.json({ success: true, reviews });
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to fetch reviews', message: error.message });
   }
 });
 
